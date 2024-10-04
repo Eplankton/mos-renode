@@ -1,0 +1,15 @@
+# dot files
+/.settings
+/.eide/log
+/.eide.usr.ctx.json
+/.cache
+
+# project out
+/build
+/bin
+/obj
+/out
+
+# eide template
+*.ept
+*.eide-template

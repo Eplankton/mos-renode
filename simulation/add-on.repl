@@ -1,0 +1,7 @@
+ccm: Memory.MappedMemory @ sysbus 0x10000000
+    size: 0x10000
+
+myLED: Miscellaneous.LED @ gpioPortA
+
+gpioPortA:
+    1 -> myLED@0

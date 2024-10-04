@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        // {
+        //     "name": "Debug by Renode",
+        //     "type": "cppdbg",
+        //     "request": "launch",
+        //     "preLaunchTask": "Run Renode",
+        //     "postDebugTask": "Close Renode",
+        //     "miDebuggerServerAddress": "localhost:1234",
+        //     "cwd": "${workspaceRoot}",
+        //     "miDebuggerPath": "arm-none-eabi-gdb",
+        //     "program": "${workspaceRoot}/build/Debug/${workspaceFolderBasename}.elf"
+        // },
+        {
+            "name": "Cortex Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build/Debug/${workspaceFolderBasename}.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "external",
+            "gdbTarget": "localhost:1234",
+            "gdbPath": "arm-none-eabi-gdb",
+            "preLaunchTask": "Run Renode",
+            "postDebugTask": "Close Renode",
+            "runToEntryPoint": "main"
+        }
+    ]
+}

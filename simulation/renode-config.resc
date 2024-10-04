@@ -1,0 +1,29 @@
+:name: STM32F4_Discovery
+:description: This script runs the usart_printf example on stm32f4 discovery
+
+# Replace to your path
+$name?="STM32F4_Discovery"
+$add_on_repl?="/home/wikechao/code/mos-renode/simulation/add-on.repl"
+$bin_path?="/home/wikechao/code/mos-renode/build/Debug/mos-renode.elf"
+
+# Create Machine & Load config
+mach create $name
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+machine LoadPlatformDescription $add_on_repl
+
+# Enable GDB
+machine StartGdbServer 1234
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+
+runMacro $reset
+
+# Showing the output of UART2
+# uart_connect sysbus.usart2
+
+logLevel -1 gpioPortA.myLED
+emulation CreateServerSocketTerminal 3333 "uart-con" false
+connector Connect sysbus.usart2 uart-con

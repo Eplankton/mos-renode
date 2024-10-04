@@ -1,0 +1,12 @@
+Diagnostics:
+  ClangTidy:
+    Remove: misc-definitions-in-headers
+  Suppress:
+    [
+      -Wimplicit-function-declaration,
+      -Wreorder,
+      -Wvolatile,
+    ]
+
+CompileFlags:
+  Add: [-std=c++23]
