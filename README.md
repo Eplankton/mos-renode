@@ -2,73 +2,67 @@
 <img src="pic/mos_logo.svg">
 </p>
 
-### 介绍 🚀
-- **[中文](https://gitee.com/Eplankton/mos-renode/blob/master/README.md) | [English](https://github.com/Eplankton/mos-renode/blob/master/README.md)**
-
-```plaintext
+### Introduction 🚀
+-  **[English](https://github.com/Eplankton/mos-renode/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-renode/blob/master/README.md)**
+```
  A_A       _    MOS Real-Time Operating System
-o'' )_____//    Cortex-M 上的简单实时操作系统
- `_/  MOS  )    使用 C/C++ 开发, Renode 仿真
+o'' )_____//    Simple RTOS on Cortex-M
+ `_/  MOS  )    Developed with C/C++, Tested on Renode
  (_(_/--(_/     [Apache License Version 2.0]
 ```
 
-### 文档 📚
-
-- **[用户手册(中文)](manual_zh.pdf)** 
-
-
-### 仓库 🌏
-- **[Gitee(中文)](https://gitee.com/Eplankton/mos-renode/) | [GitHub(English)](https://github.com/Eplankton/mos-renode)**
+### Repository 🌏
+- **[GitHub(English)](https://github.com/Eplankton/mos-renode) | [Gitee(中文)](https://gitee.com/Eplankton/mos-renode/)**
 
 
-### 架构 🔍
+### Architecture 🔍
 <img src="pic/mos-arch.svg">
 
 ```C++
 .
-├── 📁 simulation          // Renode 仿真脚本
-├── 📁 vendor              // 硬件抽象层(SPL/HAL/LL/...)
+├── 📁 simulation          // Renode emulation script
+├── 📁 vendor              // Vendor HAL (SPL/HAL/LL/...)
 ├── 📁 mos
-│   ├── 📁 arch              // 架构相关
-│   │   └── cpu.hpp          // 初始化/上下文切换
+│   ├── 📁 arch              // Architecture-Specific Code
+│   │   └── cpu.hpp          // Initialization/Context Switching
 │   │
-│   ├── 📁 kernel            // 内核层(架构无关)
-│   │   ├── macro.hpp        // 内核常量宏
-│   │   ├── type.hpp         // 基础类型
-│   │   ├── concepts.hpp     // 类型约束(可选)
-│   │   ├── data_type.hpp    // 基本数据结构
-│   │   ├── alloc.hpp        // 内存管理
-│   │   ├── global.hpp       // 内核层全局变量
-│   │   ├── printf.h/.c      // 线程安全的 printf(参考开源实现)
-│   │   ├── task.hpp         // 任务控制
-│   │   ├── sync.hpp         // 同步原语
-│   │   ├── scheduler.hpp    // 调度器
-│   │   ├── ipc.hpp          // 进程间通信
-│   │   └── utils.hpp        // 其他工具
+│   ├── 📁 kernel            // Kernel Layer (Architecture-Independent)
+│   │   ├── macro.hpp        // Kernel Constants Macro
+│   │   ├── type.hpp         // Basic Types
+│   │   ├── concepts.hpp     // Type Constraints (Optional)
+│   │   ├── data_type.hpp    // Basic Data Structures
+│   │   ├── alloc.hpp        // Memory Management
+│   │   ├── global.hpp       // Kernel Layer Global Variables
+│   │   ├── printf.h/.c      // Thread-Safe printf (Reference Open Source Implementation)
+│   │   ├── task.hpp         // Task Control
+│   │   ├── sync.hpp         // Synchronization Primitives
+│   │   ├── scheduler.hpp    // Scheduler
+│   │   ├── ipc.hpp          // Inter-Process Communication
+│   │   └── utils.hpp        // Other Utilities
 │   │
-│   ├── config.h             // 系统配置
-│   ├── kernel.hpp           // 内核模块
-│   └── shell.hpp            // Shell 命令行
+│   ├── config.h             // System Configuration
+│   ├── kernel.hpp           // Kernel Modules
+│   └── shell.hpp            // Shell Command Line
 │
-└── 📁 app                   // 用户层
-    ├── main.cpp             // 入口函数
-    └── test.hpp             // 测试代码
+└── 📁 app                   // User Code
+    ├── main.cpp             // Entry Function
+    └── test.hpp             // Test Code
 ```
 
-### 示例 🍎
-- `Shell交互`
+### Example 🍎
+`Shell Test`
 ![shell_demo](pic/shell.gif)
 
-- `Mutex测试(优先级天花板协议)`
+`Mutex Test(Priority Ceiling Protocol)`
 ![mutex_test](pic/mutex.gif)
 
-- `LCD驱动与GUI`<br>
+`LCD Driver & GUI Demo`<br>
 <p align="center">
 <img src="pic/cat.gif" width="21%"> <img src="pic/mac.gif" width="20.35%"> <img src="pic/face.gif" width="20.35%">
 <img src="pic/board.gif" width="39.1%"> <img src="pic/guilite.gif" width="34.5%">
 </p>
 
-- `并发任务周期与抢占`<br>
+`Concurrent Task Period & Time Sequence`<br>
 <p align="center">
 <img src="pic/stmviewer.png" width="80%">
 <img src="pic/T0-T1.png" width="80%">
@@ -172,7 +166,7 @@ int main()
         App::time_init, nullptr, 0, "time/init"
     );
 
-    Task::create( // Create Shell with stdio.buf
+    Task::create( // Create Shell with buffer
         Shell::launch, &stdio.buf, 1, "shell"
     );
 
@@ -190,8 +184,8 @@ int main()
 }
 ```
 
-### 启动 ⚡
-```plain
+### Boot Up ⚡
+```
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
@@ -205,84 +199,84 @@ o'' )_____//   Build   @ TIME, DATE
 ----------------------------------------
 ```
 
-### 版本 📜
+### Version 🧾
 
 
 📦 `v0.1`
 
-> ✅ 完成：
+> ✅ Done:
 > 
-> - 基本的数据结构、调度器与任务控制、内存管理
+> - Basic data structures, scheduler, and task control, memory management
 >
-> 📌 计划： 
+> 📌 Planned: 
 > 
-> - 定时器，时间片轮转调度
-> - 进程间通信 `IPC`，管道、消息队列
-> - 进程同步 `Sync`，信号量、互斥锁
-> - 移植简单的 `Shell`
-> - 可变页面大小，内存分配器
-> - `SPI` 驱动，移植 `GuiLite/LVGL` 图形库
-> - 移植到其他开发板/架构，例如 `ESP32-C3(RISC-V)`
+> - Timers, round-robin scheduling
+> - Inter-Process Communication (IPC), pipes, message queues
+> - Process synchronization (Sync), semaphores, mutexes
+> - Porting a simple Shell
+> - Variable page sizes, memory allocator
+> - SPI driver, porting GuiLite/LVGL graphics libraries
+> - Porting to other boards/arch, e.g., ESP32-C3 (RISC-V)
 
 
 
 📦 `v0.2`
 
-> ✅ 完成：
+> ✅ Done:
 > 
-> - `Sync::{Sema_t, Lock_t, Mutex_t<T>, CondVar_t, Barrier_t}` 同步原语
-> - `Scheduler::Policy::PreemptPri`，在相同优先级下则以时间片轮转 `RoundRobin` 调度
-> - `Task::terminate` 在任务退出时隐式调用，回收资源
-> - `Shell::{Command, CmdCall, launch}`，简单的命令行交互
-> - `HAL::STM32F4xx::SPI_t` 和 `Driver::Device::ST7735S_t`, 移植 `GuiLite` 图形库
-> - `Kernel::Global::os_ticks` 和 `Task::delay`，阻塞延时
-> - 重构项目组织为 `{kernel, arch, drivers}`
-> - 支持 `GCC` 编译，兼容 `STM32Cube HAL`
-> - `HAL::STM32F4xx::RTC_t`, `CmdCall::date_cmd`, `App::Calendar` 实时日历
-> - `idle` 使用 `Kernel::Global::zombie_list` 回收非活动页面
-> - 三种基本的页面分配策略 `Page_t::Policy::{POOL(池), DYNAMIC(动态), STATIC(静态)}`
+> - Synchronization primitives `Sync::{Sema_t, Lock_t, Mutex_t<T>, CondVar_t, Barrier_t}`
+> - `Scheduler::Policy::PreemptPri` with round-robin `RoundRobin` scheduling for same priority levels
+> - `Task::terminate` implicitly called upon task exit to reclaim resources
+> - Simple command-line interaction `Shell::{Command, CmdCall, launch}`
+> - `HAL::STM32F4xx::SPI_t` and `Driver::Device::ST7735S_t`, porting the `GuiLite` graphics library
+> - Blocking delay with `Kernel::Global::os_ticks` and `Task::delay`
+> - Refactored project organization into `{kernel, arch, drivers}`
+> - Support for `GCC` compilation, compatible with `STM32Cube HAL`
+> - Real-time calendar `HAL::STM32F4xx::RTC_t`, `CmdCall::date_cmd`, `App::Calendar`
+> - `idle` uses `Kernel::Global::zombie_list` to reclaim inactive pages
+> - Three basic page allocation policies `Page_t::Policy::{POOL, DYNAMIC, STATIC}`
 
 
 
 📦 `v0.3`
 
-> ✅ 完成：
+> ✅ Done:
 >
-> - `Tids` 映射到 `BitMap_t`
-> - `IPC::MsgQueue_t`，消息队列
-> - `Task::create` 允许泛型函数签名为 `void fn(auto argv)`，提供类型检查
-> - 添加 `ESP32-C3` 作为 `WiFi` 元件
-> - 添加 `Driver::Device::SD_t`，`SD`卡驱动，移植 `FatFs` 文件系统
-> - 添加 `Shell::usr_cmds`，用户注册命令
-> - **[实验性]** 原子类型 `<stdatomic.h>`
-> - **[实验性]** `Utils::IntrGuard_t`，嵌套中断临界区
-> - **[实验性]** `Scheduler + Mutex` 简单的形式化验证
+> - Mapping `Tids` to `BitMap_t`
+> - Message queue `IPC::MsgQueue_t`
+> - `Task::create` allows generic function signatures as `void fn(auto argv)` with type checker
+> - Added `ESP32-C3` as a `WiFi` component
+> - Added `Driver::Device::SD_t`, `SD` card driver, porting `FatFs` file system
+> - Added `Shell::usr_cmds` for user-registered commands
+> - **[Experimental]** Atomic types `<stdatomic.h>`
+> - **[Experimental]** `Utils::IntrGuard_t`, nested interrupt critical sections
+> - **[Experimental]** Simple formal verification of `Scheduler + Mutex`
 >
 > 
 >
-> 📌 计划： 
+> 📌 Planned: 
 >
-> - 进程间通信：管道/通道
-> - `FPU` 硬件浮点支持
-> - 性能基准测试
-> - `Result<T, E>, Option<T>`，错误处理
-> - `DMA_t` 驱动
-> - 软/硬件定时器 `Timer`
-> - **[实验性]** 添加 `POSIX` 支持
-> - **[实验性]** 异步无栈协程 `Async::{Future_t, async/await}`
-> - **[实验性]** 更多实时调度算法
+> - Inter-Process Communication: pipes/channels
+> - `FPU` hardware float support
+> - Performance benchmarking
+> - Error handling with `Result<T, E>`, `Option<T>`
+> - `DMA_t` DMA Driver
+> - Software/hardware timers `Timer`
+> - **[Experimental]** Adding `POSIX` support
+> - **[Experimental]** Asynchronous stackless coroutines `Async::{Future_t, async/await}`
+> - **[Experimental]** More real-time scheduling algorithms
 
 
 
 📦 `v0.4`
 
-> ✅ 完成：
+> ✅ Done：
 >
-> - 迁移使用 `Renode` 仿真运行系统, `Cortex-M4` 系列支持稳定
+> - Migrated the system to run using `Renode` emulation, stable support for `Cortex-M4` series
 >
 
 
-### 参考资料 🛸
+### References 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
