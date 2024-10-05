@@ -5,10 +5,10 @@
 ### Introduction 🚀
 -  **[English](https://github.com/Eplankton/mos-renode/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-renode/blob/master/README.md)**
 ```
- A_A       _    MOS Real-Time Operating System
-o'' )_____//    Simple RTOS on Cortex-M
- `_/  MOS  )    Developed with C/C++, Tested on Renode
- (_(_/--(_/     [Apache License Version 2.0]
+ A_A       _    > MOS Real-Time Operating System
+o'' )_____//    > Simple RTOS on Cortex-M
+ `_/  MOS  )    > Developed in C/C++, Tested on Renode
+ (_(_/--(_/     > [Apache License Version 2.0]
 ```
 
 ### Repository 🌏
