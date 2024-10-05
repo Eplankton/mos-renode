@@ -1,5 +1,5 @@
 <p align="center">
-<img src="pic/mos_logo.svg">
+<img src="pic/word_logo.svg">
 </p>
 
 ### 介绍 🚀
@@ -22,7 +22,7 @@ o'' )_____//    Cortex-M 上的简单实时操作系统
 
 
 ### 架构 🔍
-<img src="pic/mos-arch.svg">
+<img src="pic/mos_arch.svg">
 
 ```C++
 .

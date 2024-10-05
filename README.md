@@ -1,5 +1,5 @@
 <p align="center">
-<img src="pic/mos_logo.svg">
+<img src="pic/word_logo.svg">
 </p>
 
 ### Introduction 🚀
@@ -16,7 +16,7 @@ o'' )_____//    > Simple RTOS on Cortex-M
 
 
 ### Architecture 🔍
-<img src="pic/mos-arch.svg">
+<img src="pic/mos_arch.svg">
 
 ```C++
 .
