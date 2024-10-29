@@ -3,6 +3,7 @@
 
 #include "../arch/cpu.hpp"
 #include "task.hpp"
+#include "utils.hpp"
 
 namespace MOS::Kernel::Scheduler
 {
@@ -11,6 +12,43 @@ namespace MOS::Kernel::Scheduler
 		Ok  = true,
 		Err = !Ok,
 	} static sched_status = SchedStatus::Err;
+
+	struct SuspendGuard_t
+	{
+		using IrqGuard_t = Utils::IrqGuard_t;
+		using NestCnt_t  = volatile atomic_uint32_t;
+
+		MOS_INLINE
+		inline SuspendGuard_t()
+		{
+			IrqGuard_t guard;
+			cnt += 1;
+			sched_status = SchedStatus::Err;
+		}
+
+		MOS_INLINE
+		inline ~SuspendGuard_t()
+		{
+			IrqGuard_t guard;
+			cnt -= 1;
+			if (cnt <= 0) {
+				sched_status = SchedStatus::Ok;
+			}
+		}
+
+	private:
+		static inline NestCnt_t cnt = 0;
+	};
+
+	MOS_INLINE inline auto
+	suspend() { return SuspendGuard_t {}; }
+
+	MOS_INLINE inline auto
+	suspend(auto&& section)
+	{
+		SuspendGuard_t guard;
+		section();
+	}
 
 	enum class Policy : int8_t
 	{
@@ -118,7 +156,7 @@ namespace MOS::Kernel::Scheduler
 
 	template <Policy policy>
 	static inline void
-	next_tcb() // Select next task to run
+	next_tcb() // Select a task to run
 	{
 		auto switch_to = [](TcbPtr_t tcb) {
 			tcb->set_status(RUNNING);
@@ -126,12 +164,12 @@ namespace MOS::Kernel::Scheduler
 			debug_tcbs.mark(cur_tcb); // For debug only
 		};
 
-		auto wake_up_sleeper = [] { // sleeping_list is sorted
+		auto wake_up_sleeper = [] { // sleeping_list is always sorted
 			auto tcb = sleeping_list.begin();
 			while (tcb != sleeping_list.end()) {
 				if (os_ticks < tcb->get_wkpt()) return;
 				Task::wake_raw(tcb);
-				tcb = sleeping_list.begin(); // check next one
+				tcb = sleeping_list.begin(); // check next sleeper
 			}
 		};
 
@@ -193,7 +231,7 @@ namespace MOS::ISR
 			using namespace Kernel;
 			using namespace Utils;
 
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			Task::inc_ticks();
 			if (Scheduler::is_ready()) {
 				Task::dec_tmslc();

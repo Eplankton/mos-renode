@@ -61,7 +61,7 @@ namespace MOS::Kernel::Task
 	// Used in idle task
 	inline void recycle()
 	{
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		while (!zombie_list.empty()) {
 			auto tcb = zombie_list.begin();
 			zombie_list.remove(tcb); // Remove from zombie_list
@@ -101,7 +101,7 @@ namespace MOS::Kernel::Task
 	terminate(TcbPtr_t tcb = current())
 	{
 		MOS_ASSERT(test_irq(), "Disabled Interrupt");
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		if (tcb == nullptr || tcb->is_status(TERMINATED))
 			return;
 		terminate_raw(tcb);
@@ -245,7 +245,7 @@ namespace MOS::Kernel::Task
 		TcbPtr_t tcb = nullptr;
 
 		{
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			tcb = create_raw(fn, argv, pri, name, page);
 		}
 
@@ -322,7 +322,7 @@ namespace MOS::Kernel::Task
 	block_to(TcbPtr_t tcb, TcbList_t& dest)
 	{
 		MOS_ASSERT(test_irq(), "Disabled Interrupt");
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		if (tcb == nullptr || tcb->is_status(BLOCKED))
 			return;
 		block_to_raw(tcb, dest);
@@ -339,7 +339,7 @@ namespace MOS::Kernel::Task
 	)
 	{
 		MOS_ASSERT(test_irq(), "Disabled Interrupt");
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		if (tcb == nullptr || tcb->is_status(BLOCKED))
 			return;
 		block_to_in_order_raw(tcb, dest, cmp);
@@ -371,7 +371,7 @@ namespace MOS::Kernel::Task
 	)
 	{
 		MOS_ASSERT(test_irq(), "Disabled Interrupt");
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		if (tcb == nullptr || !tcb->is_status(BLOCKED))
 			return;
 		resume_raw(tcb, src);
@@ -387,7 +387,7 @@ namespace MOS::Kernel::Task
 	)
 	{
 		MOS_ASSERT(test_irq(), "Disabled Interrupt");
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		if (tcb == nullptr || !tcb->is_status(BLOCKED))
 			return;
 		resume_raw(tcb, src);
@@ -397,7 +397,7 @@ namespace MOS::Kernel::Task
 	change_pri(TcbPtr_t tcb, Prior_t pri)
 	{
 		MOS_ASSERT(test_irq(), "Disabled Interrupt");
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		tcb->set_pri(pri);
 		ready_list.re_insert(tcb, TCB_t::pri_cmp);
 		if (any_higher()) {
@@ -408,7 +408,7 @@ namespace MOS::Kernel::Task
 	inline TcbPtr_t
 	find(auto info)
 	{
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 
 		auto fetch = [info](TcbPtr_t tcb) {
 			if constexpr (Same<decltype(info), Tid_t>) {
@@ -426,7 +426,7 @@ namespace MOS::Kernel::Task
 	MOS_INLINE inline void
 	print_name()
 	{
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		kprintf("%s\n", current()->get_name());
 	}
 
@@ -461,7 +461,7 @@ namespace MOS::Kernel::Task
 	// For debug only
 	inline void print_all()
 	{
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		kprintf("-------------------------------------\n");
 		debug_tcbs.iter([](TcbPtr_t tcb) { print_info(tcb); });
 		kprintf("-------------------------------------\n");

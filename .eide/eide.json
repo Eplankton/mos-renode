@@ -178,7 +178,7 @@
           "afterBuildTasks": [
             {
               "name": "copy index file",
-              "disable": false,
+              "disable": true,
               "abortAfterFailed": false,
               "command": "bash -c \\\"cp build/${ConfigName}/compile_commands.json ./build/\\\""
             }

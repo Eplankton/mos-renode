@@ -2,7 +2,6 @@
 
 #include "../mos/kernel.hpp"
 #include "../mos/shell.hpp"
-
 #include "test.hpp"
 
 #define LED_1_GPIO_Port GPIOA
@@ -26,7 +25,7 @@ namespace MOS::User::Global
 		{
 			// read data register not exmpty
 			if (LL_USART_IsActiveFlag_RXNE(port)) {
-				Utils::IntrGuard_t guard;
+				Utils::IrqGuard_t guard;
 				char8_t data = LL_USART_ReceiveData8(port);
 				if (!buf.full()) {
 					if (data == '\n') // read a line
@@ -197,15 +196,18 @@ int main()
 	auto uart_test = [] {
 		uint32_t cnt = 0;
 		while (true) {
-			MOS_MSG("%d", cnt++);
-			LED_Toggle();
-			Task::delay(1000_ms);
+			Scheduler::suspend([&] {
+				MOS_MSG("%d", cnt++);
+				LED_Toggle();
+				Task::delay(1000_ms);
+			});
 		}
 	};
 
 	Task::create(Shell::launch, &stdio.buf, 0, "shell");
 	Task::create(uart_test, nullptr, 1, "uart/test");
 	Task::create(Test::MsgQueueTest, nullptr, 2, "msgq/test");
+	// Task::create(Test::MutexTest, nullptr, 2, "mtx/test");
 
 	// Start scheduling, never return
 	Scheduler::launch();

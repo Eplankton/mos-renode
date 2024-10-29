@@ -3,7 +3,7 @@
 
 // Info Configuration
 #define MOS_VERSION        "v0.4(beta)"
-#define MOS_ARCH_CORTEX_M4 "Cortex-M4F"
+#define MOS_ARCH_CORTEX_M4 "Cortex-M4F(Renode)"
 #define MOS_ARCH           MOS_ARCH_CORTEX_M4
 #define MOS_MCU            "STM32F407VGT6"
 

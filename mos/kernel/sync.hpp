@@ -35,7 +35,7 @@ namespace MOS::Kernel::Sync
 		{
 			// Assert if irq disabled
 			MOS_ASSERT(test_irq(), "Disabled Interrupt");
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			cnt -= 1;
 			if (cnt < 0) {
 				Task::block_to_raw(
@@ -50,7 +50,7 @@ namespace MOS::Kernel::Sync
 		{
 			// Assert if irq disabled
 			MOS_ASSERT(test_irq(), "Disabled Interrupt");
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			up_raw();
 			if (Task::any_higher()) {
 				return Task::yield();
@@ -110,7 +110,7 @@ namespace MOS::Kernel::Sync
 		void lock() // P operation
 		{
 			MOS_ASSERT(test_irq(), "Disabled Interrupt");
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			auto cur = Task::current();
 
 			if (owner == cur) {
@@ -156,7 +156,7 @@ namespace MOS::Kernel::Sync
 			    "Lock can only be released by holder"
 			);
 
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			recursive -= 1;
 
 			if (recursive > 0) {
@@ -336,7 +336,7 @@ namespace MOS::Kernel::Sync
 
 		inline void notify() // Signal
 		{
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			if (has_waiters()) {
 				wake_up();
 			}
@@ -345,7 +345,7 @@ namespace MOS::Kernel::Sync
 
 		inline void notify_all() // Broadcast
 		{
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			while (has_waiters()) {
 				wake_up();
 			}
@@ -358,7 +358,7 @@ namespace MOS::Kernel::Sync
 		MOS_INLINE inline void
 		block_this()
 		{
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			Task::block_to_raw(
 			    Task::current(), waiting_list
 			);

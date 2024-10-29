@@ -1,0 +1,35 @@
+:name: Multiple Machines Simulation
+:description: None
+
+# Replace to your path
+$add_on_repl?=$CWD/simulation/add_on.repl
+$bin_path?=$CWD/build/Debug/mos-renode.elf
+
+$name1?="M1"
+$name2?="M2"
+
+# Create Machine 1
+mach create $name1
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+machine LoadPlatformDescription $add_on_repl
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+runMacro $reset
+logLevel -1 gpioPortA.myLED
+emulation CreateServerSocketTerminal 3333 "uart-con1" false
+connector Connect sysbus.usart2 uart-con1
+
+# Create Machine 2
+mach create $name2
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+machine LoadPlatformDescription $add_on_repl
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+runMacro $reset
+logLevel -1 gpioPortA.myLED
+emulation CreateServerSocketTerminal 3334 "uart-con2" false
+connector Connect sysbus.usart2 uart-con2

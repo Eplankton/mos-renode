@@ -42,7 +42,7 @@ namespace MOS::Kernel::IPC
 			}
 
 			{
-				IntrGuard_t guard;
+				IrqGuard_t guard;
 				queue.push(msg);
 			}
 
@@ -60,7 +60,7 @@ namespace MOS::Kernel::IPC
 			}
 
 			{
-				IntrGuard_t guard;
+				IrqGuard_t guard;
 				res.status = Ok;
 				res.msg    = queue.serve();
 			}
@@ -97,7 +97,7 @@ namespace MOS::Kernel::IPC
 		static Status
 		check_for(EventList_t& src)
 		{
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			auto cur = Task::current();
 			if (cur->in_event()) {
 				// Still in event-linked -> Timeout
@@ -125,7 +125,7 @@ namespace MOS::Kernel::IPC
 				return TimeOut;
 
 			{
-				IntrGuard_t guard;
+				IrqGuard_t guard;
 				dest.insert_in_order(
 				    Task::current()->event, pri_wkpt_cmp
 				);
@@ -145,7 +145,7 @@ namespace MOS::Kernel::IPC
 				src.remove(*event);
 			};
 
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			if (!src.empty()) {
 				wake_up(src.begin());
 				if (Task::any_higher()) {

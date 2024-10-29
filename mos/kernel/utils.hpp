@@ -2,6 +2,7 @@
 #define _MOS_UTILS_
 
 #include <stdint.h>
+#include <stdatomic.h>
 #include <stddef.h>
 
 #include "../config.h"
@@ -168,19 +169,19 @@ namespace MOS::Utils
 	};
 
 	// Enter/Exit Global Critical Section
-	struct IntrGuard_t
+	struct IrqGuard_t
 	{
-		using NestCnt_t = volatile int32_t;
+		using NestCnt_t = volatile atomic_uint32_t;
 
 		MOS_INLINE
-		inline IntrGuard_t()
+		inline IrqGuard_t()
 		{
 			MOS_DISABLE_IRQ();
 			cnt += 1;
 		}
 
 		MOS_INLINE
-		inline ~IntrGuard_t()
+		inline ~IrqGuard_t()
 		{
 			cnt -= 1;
 			if (cnt <= 0) {

@@ -3,8 +3,8 @@
 
 # Replace to your path
 $name?="STM32F4_Discovery"
-$add_on_repl?="/home/wikechao/code/mos-renode/simulation/add-on.repl"
-$bin_path?="/home/wikechao/code/mos-renode/build/Debug/mos-renode.elf"
+$add_on_repl?=$CWD/simulation/add_on.repl
+$bin_path?=$CWD/build/Debug/mos-renode.elf
 
 # Create Machine & Load config
 mach create $name
@@ -23,6 +23,9 @@ runMacro $reset
 
 # Showing the output of UART2
 # uart_connect sysbus.usart2
+
+# sysbus.cpu EnableProfilerPerfetto $CWD/simulation/output
+# machine EnableProfiler $CWD/simulation/output
 
 logLevel -1 gpioPortA.myLED
 emulation CreateServerSocketTerminal 3333 "uart-con" false

@@ -53,7 +53,7 @@ namespace MOS::User::Test
 		static auto consumer = [](MsgQ_t& msg_q) {
 			while (true) {
 				auto [status, msg] = msg_q.recv(200_ms);
-				IntrGuard_t guard;
+				IrqGuard_t guard;
 				kprintf(status ? "" : "MsgQ Timeout!\n");
 				// kprintf(status ? "%d, " : "MsgQ Timeout!\n", msg);
 			}

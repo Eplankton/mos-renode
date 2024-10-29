@@ -6,7 +6,7 @@
 
 namespace MOS::Kernel::Alloc
 {
-	using Utils::IntrGuard_t;
+	using Utils::IrqGuard_t;
 	using Page_t    = DataType::Page_t;
 	using PageRaw_t = Page_t::Raw_t;
 	using PgSz_t    = Page_t::Size_t;
@@ -17,7 +17,7 @@ namespace MOS::Kernel::Alloc
 	inline PageRaw_t // -1(0xFFFFFFFF) as invalid
 	palloc(Page_t::Policy policy, PgSz_t pg_sz = -1)
 	{
-		IntrGuard_t guard;
+		IrqGuard_t guard;
 		switch (policy) {
 			case POOL: {
 				using Global::page_pool;

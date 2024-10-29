@@ -135,7 +135,7 @@ namespace MOS::Shell
 		static inline void
 		uname_cmd(Argv_t argv)
 		{
-			IntrGuard_t guard;
+			IrqGuard_t guard;
 			kprintf(
 			    " A_A       _  Version @ %s\n"
 			    "o'' )_____//  Build   @ %s, %s\n"
@@ -221,7 +221,15 @@ namespace MOS::Shell
 		Task::print_all();
 
 		while (true) {
-			parser(input.recv().as_str());
+			
+			auto tmp = input.recv();
+
+
+			auto str = tmp.as_str();
+			
+			
+			
+			parser(str);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 <p align="center">
-<img src="pic/word_logo.svg">
+<img src="pic/word_logo.svg" width="25%">
 </p>
 
 ### 介绍 🚀
@@ -11,6 +11,12 @@ o'' )_____//    Cortex-M 上的简单实时操作系统
  `_/  MOS  )    使用 C/C++ 开发, Renode 仿真
  (_(_/--(_/     [Apache License Version 2.0]
 ```
+
+### 安装 📦
+
+- 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)**
+- 在终端下运行 `./run.sh simulation/*.resc`
+
 
 ### 文档 📚
 
@@ -255,7 +261,7 @@ o'' )_____//   Build   @ TIME, DATE
 > - 添加 `Driver::Device::SD_t`，`SD`卡驱动，移植 `FatFs` 文件系统
 > - 添加 `Shell::usr_cmds`，用户注册命令
 > - **[实验性]** 原子类型 `<stdatomic.h>`
-> - **[实验性]** `Utils::IntrGuard_t`，嵌套中断临界区
+> - **[实验性]** `Utils::IrqGuard_t`，嵌套中断临界区
 > - **[实验性]** `Scheduler + Mutex` 简单的形式化验证
 >
 > 
@@ -278,9 +284,8 @@ o'' )_____//   Build   @ TIME, DATE
 
 > ✅ 完成：
 >
-> - 迁移使用 `Renode` 仿真运行系统, `Cortex-M4` 系列支持稳定
->
-
+> - 平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
+> - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
 
 ### 参考资料 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)

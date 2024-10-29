@@ -1,0 +1,1 @@
+renode $1 --console

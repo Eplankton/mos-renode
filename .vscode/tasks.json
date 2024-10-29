@@ -55,7 +55,7 @@
             "command": "renode",
             "args": [
                 "--console", // Don't use GUI
-                "${workspaceFolder}/simulation/*.resc" // Add the script for simulation
+                "${workspaceFolder}/simulation/debug_config.resc" // Add the script for simulation
             ],
             "dependsOn": [
                 "Build application"
