@@ -18,7 +18,7 @@ o'' )_____//    Simple RTOS on Cortex-M
 - Install **[EIDE](https://em-ide.com)** plugin, open `*.code-workspace` with `VSCode`, and run `Build` script to compile.
 - Install **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** emulation platform, and add `renode` to `/usr/bin` path.
 - Run `./run.sh emulation/*.resc` to start the emulation, type `s` to start, and `q` to quit.
-- Open a `TCP` connection to `localhost:3333/3334` amd observe the serial output.
+- Open a `TCP` connection to `localhost:3333/3334` and observe the serial output.
 
 ### Manual 📚
 
