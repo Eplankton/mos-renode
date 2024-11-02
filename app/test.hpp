@@ -1,9 +1,9 @@
 #ifndef _MOS_USER_TEST_
 #define _MOS_USER_TEST_
 
-#include "../mos/kernel/task.hpp"
-#include "../mos/kernel/sync.hpp"
-#include "../mos/kernel/ipc.hpp"
+#include "../core/kernel/task.hpp"
+#include "../core/kernel/sync.hpp"
+#include "../core/kernel/ipc.hpp"
 
 namespace MOS::User::Test
 {

@@ -1,7 +1,7 @@
 #include "main.h"
 
-#include "../mos/kernel.hpp"
-#include "../mos/shell.hpp"
+#include "../core/kernel.hpp"
+#include "../core/shell.hpp"
 #include "test.hpp"
 
 #define LED_1_GPIO_Port GPIOA

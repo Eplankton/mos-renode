@@ -4,8 +4,8 @@
   "dependenceList": [],
   "srcDirs": [
     "vendor",
-    "mos",
-    "app"
+    "app",
+    "core"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -178,7 +178,7 @@
           "afterBuildTasks": [
             {
               "name": "copy index file",
-              "disable": true,
+              "disable": false,
               "abortAfterFailed": false,
               "command": "bash -c \\\"cp build/${ConfigName}/compile_commands.json ./build/\\\""
             }
