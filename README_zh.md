@@ -1,18 +1,18 @@
 <p align="center">
-<img src="pic/word_logo.svg" width="25%">
+<img src="pic/word_logo.svg" width="35%">
 </p>
 
-### 介绍 🚀
-- **[中文](https://gitee.com/Eplankton/mos-renode/blob/master/README.md) | [English](https://github.com/Eplankton/mos-renode/blob/master/README.md)**
+## 简介 🚀
+-  **[English](https://github.com/Eplankton/mos-stm32/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-stm32/blob/master/README.md)**
 
-```plaintext
- A_A       _    MOS Real-Time Operating System
-o'' )_____//    Cortex-M 上的简单实时操作系统
- `_/  MOS  )    使用 C/C++ 开发, Renode 仿真
- (_(_/--(_/     [Apache License Version 2.0]
-```
+**_MOS_** 是一个实时操作系统（RTOS）项目，包含一个抢占式内核和一个简易命令行(均使用C++编写), 并移植了用户应用程序组件(例如，**GuiLite** 和 **FatFS**)。
 
-### 安装 📦
+## 仓库 🌏
+- `mos-core` - 内核与简易命令行, **[链接](https://github.com/Eplankton/mos-core)**
+- `mos-stm32` - 在 STM32 上运行, **[链接](https://github.com/Eplankton/mos-stm32)**
+- `mos-renode` - 使用 Renode 仿真, **[链接](https://github.com/Eplankton/mos-renode)**
+
+## 安装 📦
 - 运行 `git submodule init && git submodule update` 拉取子模块 `core`
 - 安装 `arm-none-eabi-gcc` 工具链
 - 安装 **[EIDE](https://em-ide.com)** 插件, 使用 `VSCode` 打开 `*.code-workspace`, 执行 `Build` 编译脚本
@@ -20,22 +20,18 @@ o'' )_____//    Cortex-M 上的简单实时操作系统
 - 运行 `bash ./run.sh emulation/*.resc` 开始仿真, 输入`s`启动, `q`退出
 - 打开 `TCP` 连接 `localhost:3333/3334`, 观察串口的输出
 
-### 文档 📚
+## 文档 📚
 
 - **[用户手册(中文)](manual_zh.pdf)** 
 
 
-### 仓库 🌏
-- **[Gitee(中文)](https://gitee.com/Eplankton/mos-renode/) | [GitHub(English)](https://github.com/Eplankton/mos-renode)**
-
-
-### 架构 🔍
+## 架构 🔍
 <img src="pic/mos_arch.svg">
 
 ```C++
 .
-├── 📁 emulation          // Renode 仿真脚本
-├── 📁 vendor              // 硬件抽象层(SPL/HAL/LL/...)
+├── 📁 emulation             // Renode 仿真脚本
+├── 📁 vendor                // 硬件抽象层(SPL/HAL/LL/...)
 ├── 📁 core
 │   ├── 📁 arch              // 架构相关
 │   │   └── cpu.hpp          // 初始化/上下文切换
@@ -63,7 +59,7 @@ o'' )_____//    Cortex-M 上的简单实时操作系统
     └── test.hpp             // 测试代码
 ```
 
-### 示例 🍎
+## 示例 🍎
 - `Shell交互`
 ![shell_demo](pic/shell.gif)
 
@@ -198,7 +194,7 @@ int main()
 }
 ```
 
-### 启动 ⚡
+## 启动 ⚡
 ```plain
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
@@ -213,43 +209,14 @@ o'' )_____//   Build   @ TIME, DATE
 ----------------------------------------
 ```
 
-### 版本 📜
+## 版本 📜
 
-
-📦 `v0.1`
+📦 `v0.4`
 
 > ✅ 完成：
-> 
-> - 基本的数据结构、调度器与任务控制、内存管理
 >
-> 📌 计划： 
-> 
-> - 定时器，时间片轮转调度
-> - 进程间通信 `IPC`，管道、消息队列
-> - 进程同步 `Sync`，信号量、互斥锁
-> - 移植简单的 `Shell`
-> - 可变页面大小，内存分配器
-> - `SPI` 驱动，移植 `GuiLite/LVGL` 图形库
-> - 移植到其他开发板/架构，例如 `ESP32-C3(RISC-V)`
-
-
-
-📦 `v0.2`
-
-> ✅ 完成：
-> 
-> - `Sync::{Sema_t, Lock_t, Mutex_t<T>, CondVar_t, Barrier_t}` 同步原语
-> - `Scheduler::Policy::PreemptPri`，在相同优先级下则以时间片轮转 `RoundRobin` 调度
-> - `Task::terminate` 在任务退出时隐式调用，回收资源
-> - `Shell::{Command, CmdCall, launch}`，简单的命令行交互
-> - `HAL::STM32F4xx::SPI_t` 和 `Driver::Device::ST7735S_t`, 移植 `GuiLite` 图形库
-> - `Kernel::Global::os_ticks` 和 `Task::delay`，阻塞延时
-> - 重构项目组织为 `{kernel, arch, drivers}`
-> - 支持 `GCC` 编译，兼容 `STM32Cube HAL`
-> - `HAL::STM32F4xx::RTC_t`, `CmdCall::date_cmd`, `App::Calendar` 实时日历
-> - `idle` 使用 `Kernel::Global::zombie_list` 回收非活动页面
-> - 三种基本的页面分配策略 `Page_t::Policy::{POOL(池), DYNAMIC(动态), STATIC(静态)}`
-
+> - 平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
+> - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
 
 
 📦 `v0.3`
@@ -281,15 +248,41 @@ o'' )_____//   Build   @ TIME, DATE
 > - **[实验性]** 更多实时调度算法
 
 
-
-📦 `v0.4`
+📦 `v0.2`
 
 > ✅ 完成：
->
-> - 平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
-> - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
+> 
+> - `Sync::{Sema_t, Lock_t, Mutex_t<T>, CondVar_t, Barrier_t}` 同步原语
+> - `Scheduler::Policy::PreemptPri`，在相同优先级下则以时间片轮转 `RoundRobin` 调度
+> - `Task::terminate` 在任务退出时隐式调用，回收资源
+> - `Shell::{Command, CmdCall, launch}`，简单的命令行交互
+> - `HAL::STM32F4xx::SPI_t` 和 `Driver::Device::ST7735S_t`, 移植 `GuiLite` 图形库
+> - `Kernel::Global::os_ticks` 和 `Task::delay`，阻塞延时
+> - 重构项目组织为 `{kernel, arch, drivers}`
+> - 支持 `GCC` 编译，兼容 `STM32Cube HAL`
+> - `HAL::STM32F4xx::RTC_t`, `CmdCall::date_cmd`, `App::Calendar` 实时日历
+> - `idle` 使用 `Kernel::Global::zombie_list` 回收非活动页面
+> - 三种基本的页面分配策略 `Page_t::Policy::{POOL(池), DYNAMIC(动态), STATIC(静态)}`
 
-### 参考资料 🛸
+
+📦 `v0.1`
+
+> ✅ 完成：
+> 
+> - 基本的数据结构、调度器与任务控制、内存管理
+>
+> 📌 计划： 
+> 
+> - 定时器，时间片轮转调度
+> - 进程间通信 `IPC`，管道、消息队列
+> - 进程同步 `Sync`，信号量、互斥锁
+> - 移植简单的 `Shell`
+> - 可变页面大小，内存分配器
+> - `SPI` 驱动，移植 `GuiLite/LVGL` 图形库
+> - 移植到其他开发板/架构，例如 `ESP32-C3(RISC-V)`
+
+
+## 参考资料 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
@@ -303,11 +296,13 @@ o'' )_____//   Build   @ TIME, DATE
 - [Renode](https://renode.io/)
 
 ```
-There's a movie on TV.
-Four boys are walking on railroad tracks...
-I better go, too.
+I've seen things you people wouldn't believe.
+Attack ships on fire off the shoulder of Orion.
+I watched C-beams glitter in the dark near the Tannhäuser Gate.
+All those moments will be lost in time, like tears in rain.
+Time to die.
 ```
 
 <p align="center">
-<img src="pic/cbp-green.svg">
+<img src="pic/osheim.svg">
 </p>

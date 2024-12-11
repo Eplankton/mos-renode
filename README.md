@@ -1,17 +1,18 @@
 <p align="center">
-<img src="pic/word_logo.svg" width="25%">
+<img src="pic/word_logo.svg" width="35%">
 </p>
 
-### Introduction 🚀
--  **[English](https://github.com/Eplankton/mos-renode/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-renode/blob/master/README.md)**
-```
- A_A       _    MOS Real-Time Operating System
-o'' )_____//    Simple RTOS on Cortex-M
- `_/  MOS  )    Developed with C/C++, Tested on Renode
- (_(_/--(_/     [Apache License Version 2.0]
-```
+## Introduction 🚀
+-  **[English](https://github.com/Eplankton/mos-stm32/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-stm32/blob/master/README.md)**
 
-### Installation 📦
+**_MOS_** is a real-time operating system (RTOS) project consists of a preemptive kernel and a command-line shell(both in C++) with optional user application components being ported(e.g., **GuiLite** and **FatFS**).
+
+## Repository 🌏
+- `mos-core` - The kernel and shell, check **[here](https://github.com/Eplankton/mos-core)**.
+- `mos-stm32` - Running on STM32 series, check **[here](https://github.com/Eplankton/mos-stm32)**.
+- `mos-renode` - Testing on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
+
+## Install 📦
 
 - Run `git submodule init && git submodule update` to pull the submodules.
 - Install `arm-none-eabi-gcc` toolchain.
@@ -20,25 +21,21 @@ o'' )_____//    Simple RTOS on Cortex-M
 - Run `./run.sh emulation/*.resc` to start the emulation, type `s` to start, and `q` to quit.
 - Open a `TCP` connection to `localhost:3333/3334` and observe the serial output.
 
-### Manual 📚
+## Manual 📚
 
-- **[用户手册(中文)](manual_zh.pdf) | [Manual(English)](translation in progress)**
-
-
-### Repository 🌏
-- **[GitHub(English)](https://github.com/Eplankton/mos-renode) | [Gitee(中文)](https://gitee.com/Eplankton/mos-renode/)**
+- **[用户手册(中文)](manual_zh.pdf) | [Manual(English)](in progress)**
 
 
-### Architecture 🔍
+## Architecture 🔍
 <img src="pic/mos-arch.svg">
 
 ```C++
 .
-├── 📁 emulation          // Renode emulation script
-├── 📁 vendor              // Vendor HAL (SPL/HAL/LL/...)
+├── 📁 emulation             // Renode emulation script
+├── 📁 vendor                // Vendor HAL (SPL/HAL/LL/...)
 ├── 📁 core
 │   ├── 📁 arch              // Architecture-Specific Code
-│   │   └── cpu.hpp          // Initialization/Context Switching
+│   │   └── cpu.hpp          // Initialization/Context Switch assembly code
 │   │
 │   ├── 📁 kernel            // Kernel Layer (Architecture-Independent)
 │   │   ├── macro.hpp        // Kernel Constants Macro
@@ -63,7 +60,7 @@ o'' )_____//    Simple RTOS on Cortex-M
     └── test.hpp             // Test Code
 ```
 
-### Example 🍎
+## Example 🍎
 `Shell Test`
 ![shell_demo](pic/shell.gif)
 
@@ -198,7 +195,7 @@ int main()
 }
 ```
 
-### Boot Up ⚡
+## Boot Up ⚡
 ```
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
@@ -213,43 +210,14 @@ o'' )_____//   Build   @ TIME, DATE
 ----------------------------------------
 ```
 
-### Version 🧾
+## Version 🧾
 
+📦 `v0.4`
 
-📦 `v0.1`
-
-> ✅ Done:
-> 
-> - Basic data structures, scheduler, and task control, memory management
+> ✅ Done：
 >
-> 📌 Planned: 
-> 
-> - Timers, round-robin scheduling
-> - Inter-Process Communication (IPC), pipes, message queues
-> - Process synchronization (Sync), semaphores, mutexes
-> - Porting a simple Shell
-> - Variable page sizes, memory allocator
-> - SPI driver, porting GuiLite/LVGL graphics libraries
-> - Porting to other boards/arch, e.g., ESP32-C3 (RISC-V)
-
-
-
-📦 `v0.2`
-
-> ✅ Done:
-> 
-> - Synchronization primitives `Sync::{Sema_t, Lock_t, Mutex_t<T>, CondVar_t, Barrier_t}`
-> - `Scheduler::Policy::PreemptPri` with round-robin `RoundRobin` scheduling for same priority levels
-> - `Task::terminate` implicitly called upon task exit to reclaim resources
-> - Simple command-line interaction `Shell::{Command, CmdCall, launch}`
-> - `HAL::STM32F4xx::SPI_t` and `Driver::Device::ST7735S_t`, porting the `GuiLite` graphics library
-> - Blocking delay with `Kernel::Global::os_ticks` and `Task::delay`
-> - Refactored project organization into `{kernel, arch, drivers}`
-> - Support for `GCC` compilation, compatible with `STM32Cube HAL`
-> - Real-time calendar `HAL::STM32F4xx::RTC_t`, `CmdCall::date_cmd`, `App::Calendar`
-> - `idle` uses `Kernel::Global::zombie_list` to reclaim inactive pages
-> - Three basic page allocation policies `Page_t::Policy::{POOL, DYNAMIC, STATIC}`
-
+> - Adopt `Renode` emulation platform, stable support for `Cortex-M` series
+> - **[Experimental]** Add scheduler lock `Scheduler::suspend()`
 
 
 📦 `v0.3`
@@ -281,16 +249,42 @@ o'' )_____//   Build   @ TIME, DATE
 > - **[Experimental]** More real-time scheduling algorithms
 
 
+📦 `v0.2`
 
-📦 `v0.4`
+> ✅ Done:
+> 
+> - Synchronization primitives `Sync::{Sema_t, Lock_t, Mutex_t<T>, CondVar_t, Barrier_t}`
+> - `Scheduler::Policy::PreemptPri` with `RoundRobin` scheduling for same priority levels
+> - `Task::terminate` implicitly called upon task exit to reclaim resources
+> - Simple command-line interaction `Shell::{Command, CmdCall, launch}`
+> - `HAL::STM32F4xx::SPI_t` and `Driver::Device::ST7735S_t`, porting the `GuiLite` graphics library
+> - Blocking delay with `Kernel::Global::os_ticks` and `Task::delay`
+> - Refactored project organization into `{kernel, arch, drivers}`
+> - Support for `GCC` compilation, compatible with `STM32Cube HAL`
+> - Real-time calendar `HAL::STM32F4xx::RTC_t`, `CmdCall::date_cmd`, `App::Calendar`
+> - `idle` uses `Kernel::Global::zombie_list` to reclaim inactive pages
+> - Three basic page allocation policies `Page_t::Policy::{POOL, DYNAMIC, STATIC}`
 
-> ✅ Done：
+
+📦 `v0.1`
+
+> ✅ Done:
+> 
+> - Basic data structures, scheduler, and task control, memory management
 >
-> - Shift to run `Renode` emulation platform, stable support for `Cortex-M` series
-> - **[Experimental]** Add scheduler lock `Scheduler::suspend()`
+> 📌 Planned: 
+> 
+> - Timers, round-robin scheduling
+> - Inter-Process Communication (IPC), pipes, message queues
+> - Process synchronization (Sync), semaphores, mutexes
+> - Porting a simple Shell
+> - Variable page sizes, memory allocator
+> - SPI driver, porting GuiLite/LVGL graphics libraries
+> - Porting to other boards/arch, e.g., ESP32-C3 (RISC-V)
 
 
-### References 🛸
+
+## References 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
@@ -304,11 +298,13 @@ o'' )_____//   Build   @ TIME, DATE
 - [Renode](https://renode.io/)
 
 ```
-There's a movie on TV.
-Four boys are walking on railroad tracks...
-I better go, too.
+I've seen things you people wouldn't believe.
+Attack ships on fire off the shoulder of Orion.
+I watched C-beams glitter in the dark near the Tannhäuser Gate.
+All those moments will be lost in time, like tears in rain.
+Time to die.
 ```
 
 <p align="center">
-<img src="pic/cbp-green.svg">
+<img src="pic/osheim.svg">
 </p>

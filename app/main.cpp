@@ -172,11 +172,8 @@ namespace MOS::BSP
 		/* Reset of all peripherals */
 		HAL_Init();
 
-		/* init clock */
-		SystemClock_Config();
-
 		/* Set SysTick = 1ms */
-		SysTick_Config(MOS_CONF_SYSTICK);
+		SysTick_Config(SystemCoreClock / MOS_CONF_SYSTICK);
 
 		/* init peripheral */
 		LED_Config();
