@@ -1,9 +1,7 @@
 #ifndef _MOS_USER_TEST_
 #define _MOS_USER_TEST_
 
-#include "../core/kernel/task.hpp"
-#include "../core/kernel/sync.hpp"
-#include "../core/kernel/ipc.hpp"
+#include "../core/kernel.hpp"
 
 namespace MOS::User::Test
 {
@@ -17,7 +15,7 @@ namespace MOS::User::Test
 		static auto mtx_test = [](uint32_t ticks) {
 			auto name = Task::current()->get_name();
 			while (true) {
-				mutex.exec([&] {
+				mutex.proc([&] {
 					for (auto _: Range(0, 5)) {
 						kprintf("%s is working...\n", name);
 						Task::delay(100_ms);
@@ -71,6 +69,30 @@ namespace MOS::User::Test
 		};
 
 		Task::create(launch, nullptr, Macro::PRI_MAX, "msg_q/test");
+	}
+
+	void AsyncTest()
+	{
+		auto sum_worker = [&](int n) -> Async::Future_t<int> {
+			// LOG("sum(%d) begin!", n);
+			uint32_t res = 0;
+			for (int i = 0; i < n; i++) {
+				// LOG("sum(%d)...%d", n, res);
+				res += i;
+				co_await Async::delay(5000_ms / n);
+			}
+			// LOG("sum(%d) end!", n);
+			co_return res;
+		};
+
+		auto sum = [&](int n) -> Async::Future_t<> {
+			LOG("Recv sum(%d) => %d", n, co_await sum_worker(n));
+		};
+
+		// launch all coroutines
+		for (int k = 500; k > 0; k -= 1) {
+			sum(k);
+		}
 	}
 }
 

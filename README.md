@@ -2,21 +2,21 @@
 <img src="pic/word_logo.svg" width="35%">
 </p>
 
-## Introduction 🚀
--  **[English](https://github.com/Eplankton/mos-stm32/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-stm32/blob/master/README.md)**
+## About 🚀
+-  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
 
-**_MOS_** is a real-time operating system (RTOS) project consists of a preemptive kernel and a command-line shell(both in C++) with optional user application components being ported(e.g., **GuiLite** and **FatFS**).
+**MOS** is a Real-Time Operating System (RTOS) project consists of a preemptive kernel and a command-line shell(both in C++) with application components(e.g., **GuiLite** and **FatFS**).
 
 ## Repository 🌏
-- `mos-core` - The kernel and shell, check **[here](https://github.com/Eplankton/mos-core)**.
+- `mos-core` - The kernel and the shell, check **[here](https://github.com/Eplankton/mos-core)**.
 - `mos-stm32` - Running on STM32 series, check **[here](https://github.com/Eplankton/mos-stm32)**.
 - `mos-renode` - Testing on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
 
 ## Install 📦
 
-- Run `git submodule init && git submodule update` to pull the submodules.
+- Run `git submodule init && git submodule update` to pull the submodule.
 - Install `arm-none-eabi-gcc` toolchain.
-- Install **[EIDE](https://em-ide.com)** plugin, open `*.code-workspace` with `VSCode`, and run `Build` script to compile.
+- Install **[EIDE](https://em-ide.com)** plugin, open `*.code-workspace` with `VS Code`, and run `Build` script to compile.
 - Install **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** emulation platform, and add `renode` to `/usr/bin` path.
 - Run `./run.sh emulation/*.resc` to start the emulation, type `s` to start, and `q` to quit.
 - Open a `TCP` connection to `localhost:3333/3334` and observe the serial output.
@@ -37,16 +37,17 @@
 │   ├── 📁 arch              // Architecture-Specific Code
 │   │   └── cpu.hpp          // Initialization/Context Switch assembly code
 │   │
-│   ├── 📁 kernel            // Kernel Layer (Architecture-Independent)
+│   ├── 📁 kernel            // Kernel (Architecture-Independent)
 │   │   ├── macro.hpp        // Kernel Constants Macro
 │   │   ├── type.hpp         // Basic Types
 │   │   ├── concepts.hpp     // Type Constraints (Optional)
 │   │   ├── data_type.hpp    // Basic Data Structures
 │   │   ├── alloc.hpp        // Memory Management
-│   │   ├── global.hpp       // Kernel Layer Global Variables
+│   │   ├── global.hpp       // Kernel Global Variables
 │   │   ├── printf.h/.c      // Thread-Safe printf (Reference Open Source Implementation)
 │   │   ├── task.hpp         // Task Control
 │   │   ├── sync.hpp         // Synchronization Primitives
+│   │   ├── async.hpp        // Asynchronous Stackless Coroutines
 │   │   ├── scheduler.hpp    // Scheduler
 │   │   ├── ipc.hpp          // Inter-Process Communication
 │   │   └── utils.hpp        // Other Utilities
@@ -131,33 +132,21 @@ namespace MOS::User::BSP
 ```C++
 namespace MOS::User::App
 {
-    Sync::Barrier_t bar {2}; // Set Barrier to sync tasks
-
-    void led1(Device::LED_t leds[])
+    // Blinky by Task::delay()
+    void red_blink(Device::LED_t leds[])
     {
-        bar.wait();
-        for (auto _: Range(0, 20)) {
-           leds[1].toggle(); // green
-           Task::delay(250_ms);
-        }
-        kprintf(
-            "%s exits...\n",
-            Task::current()->get_name()
-        );
-    }
-
-    void led0(Device::LED_t leds[])
-    {
-        Task::create(
-            led1, 
-            leds, 
-            Task::current()->get_pri(),
-            "led1"
-        );
-        bar.wait();
         while (true) {
             leds[0].toggle(); // red
             Task::delay(500_ms);
+        }
+    }
+
+    // Blinky by Async::delay()
+    Async::Future_t<void> blue_blink(Device::LED_t leds[])
+    {
+        while (true) {
+            leds[1].toggle(); // blue
+            co_await Async::delay(500_ms);
         }
     }
     ...
@@ -188,6 +177,7 @@ int main()
     /* Test examples */
     Test::MutexTest();
     Test::MsgQueueTest();
+    Test::AsyncTest();
     ...
     
     // Start scheduling, never return
@@ -196,17 +186,17 @@ int main()
 ```
 
 ## Boot Up ⚡
-```
+```plain
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
- (_(_/--(_/    2023-2024 Copyright by Eplankton
+ (_(_/--(_/    2023-2025 Copyright by Eplankton
 
- Tid   Name   Priority   Status    Mem%
+<Tid> <Name> <Priority> <Status>  <Mem%>
 ----------------------------------------
- #0    idle      15      READY      10%
- #1    shell      1      BLOCKED    21%
- #2    led0       2      RUNNING     9%
+ #0    idle     15       READY      10%
+ #1    shell     1       BLOCKED    21%
+ #2    led0      2       RUNNING     9%
 ----------------------------------------
 ```
 
@@ -216,8 +206,9 @@ o'' )_____//   Build   @ TIME, DATE
 
 > ✅ Done：
 >
-> - Adopt `Renode` emulation platform, stable support for `Cortex-M` series
+> - Adopt `Renode` emulation platform, add stable support for `Cortex-M` series
 > - **[Experimental]** Add scheduler lock `Scheduler::suspend()`
+> - **[Experimental]** Add Asynchronous stackless coroutines `Async::{Future_t, co_await/return}`
 
 
 📦 `v0.3`
@@ -245,7 +236,6 @@ o'' )_____//   Build   @ TIME, DATE
 > - `DMA_t` DMA Driver
 > - Software/hardware timers `Timer`
 > - **[Experimental]** Adding `POSIX` support
-> - **[Experimental]** Asynchronous stackless coroutines `Async::{Future_t, async/await}`
 > - **[Experimental]** More real-time scheduling algorithms
 
 
@@ -277,7 +267,7 @@ o'' )_____//   Build   @ TIME, DATE
 > - Timers, round-robin scheduling
 > - Inter-Process Communication (IPC), pipes, message queues
 > - Process synchronization (Sync), semaphores, mutexes
-> - Porting a simple Shell
+> - Design a simple Shell
 > - Variable page sizes, memory allocator
 > - SPI driver, porting GuiLite/LVGL graphics libraries
 > - Porting to other boards/arch, e.g., ESP32-C3 (RISC-V)
@@ -297,14 +287,15 @@ o'' )_____//   Build   @ TIME, DATE
 - [Embassy](https://embassy.dev/)
 - [Renode](https://renode.io/)
 
-```
-I've seen things you people wouldn't believe.
-Attack ships on fire off the shoulder of Orion.
-I watched C-beams glitter in the dark near the Tannhäuser Gate.
-All those moments will be lost in time, like tears in rain.
-Time to die.
-```
-
 <p align="center">
-<img src="pic/osheim.svg">
+<img src="pic/osh-zh-en.svg">
 </p>
+
+```plain
+"I've seen things you people wouldn't believe.  
+Attack ships on fire off the shoulder of Orion.  
+I watched C-beams glitter in the dark near the Tannhäuser Gate.  
+All those moments will be lost in time, like tears in rain.  
+Time to die."  
+- Roy Batty, Blade Runner (1982)
+```

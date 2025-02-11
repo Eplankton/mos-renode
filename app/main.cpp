@@ -31,7 +31,7 @@ namespace MOS::User::Global
 					if (data == '\n') // read a line
 						buf.signal_from_isr();
 					else
-						buf.add(data);
+						buf.push(data);
 				}
 				else {
 					buf.clear();
@@ -163,11 +163,11 @@ namespace MOS::BSP
 	extern "C" void USART2_IRQHandler()
 	{
 		User::Global::stdio.read_line(
-		    [] { MOS_MSG("Oops! Command too long!"); }
+		    [] { LOG("Oops! Command too long!"); }
 		);
 	}
 
-	void Config()
+	void config()
 	{
 		/* Reset of all peripherals */
 		HAL_Init();
@@ -188,21 +188,10 @@ int main()
 	using namespace User;
 	using namespace User::Global;
 
-	BSP::Config();
-
-	auto uart_test = [] {
-		uint32_t cnt = 0;
-		while (true) {
-			Scheduler::suspend([&] {
-				MOS_MSG("%d", cnt++);
-				LED_Toggle();
-				Task::delay(1000_ms);
-			});
-		}
-	};
+	BSP::config();
 
 	Task::create(Shell::launch, &stdio.buf, 0, "shell");
-	Task::create(uart_test, nullptr, 1, "uart/test");
+	Task::create(Test::AsyncTest, nullptr, 2, "async/test");
 	Task::create(Test::MsgQueueTest, nullptr, 2, "msgq/test");
 	// Task::create(Test::MutexTest, nullptr, 2, "mtx/test");
 

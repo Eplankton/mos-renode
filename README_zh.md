@@ -3,9 +3,9 @@
 </p>
 
 ## 简介 🚀
--  **[English](https://github.com/Eplankton/mos-stm32/blob/master/README.md) | [中文](https://gitee.com/Eplankton/mos-stm32/blob/master/README.md)**
+-  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
 
-**_MOS_** 是一个实时操作系统（RTOS）项目，包含一个抢占式内核和一个简易命令行(均使用C++编写), 并移植了用户应用程序组件(例如，**GuiLite** 和 **FatFS**)。
+**MOS** 是一个实时操作系统（RTOS）项目，包含一个抢占式内核和简易命令行(使用C++编写), 并移植了一些应用层组件(例如，**GuiLite** 和 **FatFS**)。
 
 ## 仓库 🌏
 - `mos-core` - 内核与简易命令行, **[链接](https://github.com/Eplankton/mos-core)**
@@ -15,14 +15,14 @@
 ## 安装 📦
 - 运行 `git submodule init && git submodule update` 拉取子模块 `core`
 - 安装 `arm-none-eabi-gcc` 工具链
-- 安装 **[EIDE](https://em-ide.com)** 插件, 使用 `VSCode` 打开 `*.code-workspace`, 执行 `Build` 编译脚本
+- 安装 **[EIDE](https://em-ide.com)** 插件, 使用 `VS Code` 打开 `*.code-workspace`, 执行 `Build` 编译脚本
 - 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径
 - 运行 `bash ./run.sh emulation/*.resc` 开始仿真, 输入`s`启动, `q`退出
 - 打开 `TCP` 连接 `localhost:3333/3334`, 观察串口的输出
 
 ## 文档 📚
 
-- **[用户手册(中文)](manual_zh.pdf)** 
+- **[用户手册(中文)](manual_zh.pdf) | [Manual(English)](in progress)**
 
 
 ## 架构 🔍
@@ -46,6 +46,7 @@
 │   │   ├── printf.h/.c      // 线程安全的 printf(参考开源实现)
 │   │   ├── task.hpp         // 任务控制
 │   │   ├── sync.hpp         // 同步原语
+│   │   ├── async.hpp        // 异步协程
 │   │   ├── scheduler.hpp    // 调度器
 │   │   ├── ipc.hpp          // 进程间通信
 │   │   └── utils.hpp        // 其他工具
@@ -130,33 +131,21 @@ namespace MOS::User::BSP
 ```C++
 namespace MOS::User::App
 {
-    Sync::Barrier_t bar {2}; // Set Barrier to sync tasks
-
-    void led1(Device::LED_t leds[])
+    // Blinky by Task::delay()
+    void red_blink(Device::LED_t leds[])
     {
-        bar.wait();
-        for (auto _: Range(0, 20)) {
-           leds[1].toggle(); // green
-           Task::delay(250_ms);
-        }
-        kprintf(
-            "%s exits...\n",
-            Task::current()->get_name()
-        );
-    }
-
-    void led0(Device::LED_t leds[])
-    {
-        Task::create(
-            led1, 
-            leds, 
-            Task::current()->get_pri(),
-            "led1"
-        );
-        bar.wait();
         while (true) {
             leds[0].toggle(); // red
             Task::delay(500_ms);
+        }
+    }
+
+    // Blinky by Async::delay()
+    Async::Future_t<void> blue_blink(Device::LED_t leds[])
+    {
+        while (true) {
+            leds[1].toggle(); // blue
+            co_await Async::delay(500_ms);
         }
     }
     ...
@@ -187,6 +176,7 @@ int main()
     /* Test examples */
     Test::MutexTest();
     Test::MsgQueueTest();
+    Test::AsyncTest();
     ...
     
     // Start scheduling, never return
@@ -199,13 +189,13 @@ int main()
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
- (_(_/--(_/    2023-2024 Copyright by Eplankton
+ (_(_/--(_/    2023-2025 Copyright by Eplankton
 
- Tid   Name   Priority   Status    Mem%
+<Tid> <Name> <Priority> <Status>  <Mem%>
 ----------------------------------------
- #0    idle      15      READY      10%
- #1    shell      1      BLOCKED    21%
- #2    led0       2      RUNNING     9%
+ #0    idle     15       READY      10%
+ #1    shell     1       BLOCKED    21%
+ #2    led0      2       RUNNING     9%
 ----------------------------------------
 ```
 
@@ -217,6 +207,7 @@ o'' )_____//   Build   @ TIME, DATE
 >
 > - 平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
 > - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
+> - **[实验性]** 添加异步无栈协程 `Async::{Future_t, co_await/return}`
 
 
 📦 `v0.3`
@@ -244,7 +235,6 @@ o'' )_____//   Build   @ TIME, DATE
 > - `DMA_t` 驱动
 > - 软/硬件定时器 `Timer`
 > - **[实验性]** 添加 `POSIX` 支持
-> - **[实验性]** 异步无栈协程 `Async::{Future_t, async/await}`
 > - **[实验性]** 更多实时调度算法
 
 
@@ -295,14 +285,15 @@ o'' )_____//   Build   @ TIME, DATE
 - [Embassy](https://embassy.dev/)
 - [Renode](https://renode.io/)
 
-```
-I've seen things you people wouldn't believe.
-Attack ships on fire off the shoulder of Orion.
-I watched C-beams glitter in the dark near the Tannhäuser Gate.
-All those moments will be lost in time, like tears in rain.
-Time to die.
-```
-
 <p align="center">
-<img src="pic/osheim.svg">
+<img src="pic/osh-zh-en.svg">
 </p>
+
+```plain
+"I've seen things you people wouldn't believe.  
+Attack ships on fire off the shoulder of Orion.  
+I watched C-beams glitter in the dark near the Tannhäuser Gate.  
+All those moments will be lost in time, like tears in rain.  
+Time to die."  
+- Roy Batty, Blade Runner (1982)
+```

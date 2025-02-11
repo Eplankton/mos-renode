@@ -12,6 +12,7 @@ $name2?="M2"
 mach create $name1
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
 machine LoadPlatformDescription $add_on_repl
+nvic Frequency 160000000
 macro reset
 """
     sysbus LoadELF $bin_path
@@ -25,6 +26,7 @@ connector Connect sysbus.usart2 uart-con1
 mach create $name2
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
 machine LoadPlatformDescription $add_on_repl
+nvic Frequency 160000000
 macro reset
 """
     sysbus LoadELF $bin_path
