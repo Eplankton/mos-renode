@@ -8,16 +8,16 @@ namespace MOS::User::Test
 	using namespace Kernel;
 	using namespace Utils;
 
-	void MutexTest()
+	void MutexTest(size_t scale)
 	{
 		static Sync::Mutex_t mutex;
 
 		static auto mtx_test = [](uint32_t ticks) {
-			auto name = Task::current()->get_name();
+			auto cur = Task::current();
 			while (true) {
-				mutex.proc([&] {
+				mutex.hold([&] {
 					for (auto _: Range(0, 5)) {
-						kprintf("%s is working...\n", name);
+						kprintf("Mutex(%d => %d) holds...\n", cur->old_pri, cur->pri);
 						Task::delay(100_ms);
 					}
 				});
@@ -25,20 +25,20 @@ namespace MOS::User::Test
 			}
 		};
 
-		static auto launch = [] {
-			Task::create(mtx_test, 10_ms, 3, "Mtx3");
-			Task::delay(5_ms);
-			Task::create(mtx_test, 20_ms, 2, "Mtx2");
-			Task::delay(5_ms);
-			Task::create(mtx_test, 30_ms, 1, "Mtx1");
+		static auto launch = [](size_t scale) {
+			for (auto i = scale; i > 0; i -= 1) {
+				Task::create(mtx_test, i * 10_ms, i, "mtx");
+				Task::delay(5_ms);
+			}
 		};
 
-		Task::create(launch, nullptr, Macro::PRI_MAX, "MtxTest");
+		Task::create(launch, scale, Macro::PRI_MAX, "mutex/test");
 	}
 
+	template <size_t LEN>
 	void MsgQueueTest()
 	{
-		using MsgQ_t = IPC::MsgQueue_t<int, 3>;
+		using MsgQ_t = IPC::MsgQueue_t<int, LEN>;
 
 		static auto producer = [](MsgQ_t& msg_q) {
 			uint32_t i = Task::current()->get_pri();
@@ -59,39 +59,40 @@ namespace MOS::User::Test
 
 		static auto launch = [] {
 			static MsgQ_t msg_q; // Create a static MsgQueue
-			Task::Prior_t pri_seq[] = {5, 6, 7, 8, 9};
 
-			Task::create(consumer, &msg_q, 4, "recv"); // Create a Consumer
+			auto x = Sync::Mutex_t {IPC::Queue_t<int, 3> {}};
+			x.lock().get().push(123);
 
-			for (auto p: pri_seq) { // Create several Producers
-				Task::create(producer, &msg_q, p, "send");
+			constexpr Task::Prior_t base_pri = LEN + 1; // Set base priority
+
+			Task::create(consumer, &msg_q, base_pri, "recv"); // Create a Consumer
+
+			for (auto p = base_pri; p <= base_pri * 2; p += 1) {
+				Task::create(producer, &msg_q, p, "send"); // Create multiple Producers
 			}
 		};
 
 		Task::create(launch, nullptr, Macro::PRI_MAX, "msg_q/test");
 	}
 
-	void AsyncTest()
+	void AsyncTest(size_t scale)
 	{
-		auto sum_worker = [&](int n) -> Async::Future_t<int> {
-			// LOG("sum(%d) begin!", n);
-			uint32_t res = 0;
-			for (int i = 0; i < n; i++) {
-				// LOG("sum(%d)...%d", n, res);
-				res += i;
-				co_await Async::delay(5000_ms / n);
+		auto sum_worker = [&](size_t n) -> Async::Future_t<int> {
+			uint32_t result = 0;
+			for (uint32_t i = 0; i < n; i += 1) {
+				result += i;
+				co_await Async::delay(1000_ms / n);
 			}
-			// LOG("sum(%d) end!", n);
-			co_return res;
+			co_return result;
 		};
 
-		auto sum = [&](int n) -> Async::Future_t<> {
+		auto sum = [&](size_t n) -> Async::Future_t<> {
 			LOG("Recv sum(%d) => %d", n, co_await sum_worker(n));
 		};
 
 		// launch all coroutines
-		for (int k = 500; k > 0; k -= 1) {
-			sum(k);
+		for (auto k = scale; k > 0; k -= 1) {
+			auto fut = sum(k); // lazy calculation
 		}
 	}
 }

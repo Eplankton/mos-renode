@@ -2,50 +2,50 @@
 <img src="pic/word_logo.svg" width="35%">
 </p>
 
-## About 🚀
+# MOS Renode
+
+### About 🚀
 -  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
 
 **MOS** is a Real-Time Operating System (RTOS) project consists of a preemptive kernel and a command-line shell(both in C++) with application components(e.g., **GuiLite** and **FatFS**).
 
-## Repository 🌏
+### Repository 🌏
 - `mos-core` - The kernel and the shell, check **[here](https://github.com/Eplankton/mos-core)**.
 - `mos-stm32` - Running on STM32 series, check **[here](https://github.com/Eplankton/mos-stm32)**.
 - `mos-renode` - Testing on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
 
-## Install 📦
+### Start 📦
 
-- Run `git submodule init && git submodule update` to pull the submodule.
-- Install `arm-none-eabi-gcc` toolchain.
-- Install **[EIDE](https://em-ide.com)** plugin, open `*.code-workspace` with `VS Code`, and run `Build` script to compile.
-- Install **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** emulation platform, and add `renode` to `/usr/bin` path.
-- Run `./run.sh emulation/*.resc` to start the emulation, type `s` to start, and `q` to quit.
-- Open a `TCP` connection to `localhost:3333/3334` and observe the serial output.
+- Run `git submodule init && git submodule update` to pull the submodule `core`.
+- Install the **[EIDE](https://em-ide.com)** plugin and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
+- Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** simulation platform, and add `renode` to the `/usr/bin` path or environment variables.
+- Run `Start Debugging` or press `F5` to start the simulation, open a `TCP` connection to `localhost:3333`, and observe the serial port output.
 
-## Manual 📚
+### Manual 📚
 
-- **[用户手册(中文)](manual_zh.pdf) | [Manual(English)](in progress)**
+- **[用户手册(中文)](manual_zh.pdf) | [Manual(English) coming soon...]()**
 
 
-## Architecture 🔍
-<img src="pic/mos-arch.svg">
+### Architecture 🔍
+<img src="pic/mos_arch.svg">
 
-```C++
+```
 .
 ├── 📁 emulation             // Renode emulation script
-├── 📁 vendor                // Vendor HAL (SPL/HAL/LL/...)
+├── 📁 vendor                // Vendor HALs
 ├── 📁 core
 │   ├── 📁 arch              // Architecture-Specific Code
 │   │   └── cpu.hpp          // Initialization/Context Switch assembly code
 │   │
-│   ├── 📁 kernel            // Kernel (Architecture-Independent)
+│   ├── 📁 kernel            // Kernel Layer
 │   │   ├── macro.hpp        // Kernel Constants Macro
 │   │   ├── type.hpp         // Basic Types
-│   │   ├── concepts.hpp     // Type Constraints (Optional)
+│   │   ├── concepts.hpp     // Type Constraints
 │   │   ├── data_type.hpp    // Basic Data Structures
 │   │   ├── alloc.hpp        // Memory Management
 │   │   ├── global.hpp       // Kernel Global Variables
-│   │   ├── printf.h/.c      // Thread-Safe printf (Reference Open Source Implementation)
-│   │   ├── task.hpp         // Task Control
+│   │   ├── printf.h/.c      // Thread-Safe printf
+│   │   ├── task.hpp         // Task Management
 │   │   ├── sync.hpp         // Synchronization Primitives
 │   │   ├── async.hpp        // Asynchronous Stackless Coroutines
 │   │   ├── scheduler.hpp    // Scheduler
@@ -61,7 +61,7 @@
     └── test.hpp             // Test Code
 ```
 
-## Example 🍎
+### Example 🍎
 `Shell Test`
 ![shell_demo](pic/shell.gif)
 
@@ -95,11 +95,10 @@ namespace MOS::User::Global
 {
     using namespace HAL::STM32F4xx;
     using namespace Driver::Device;
-    using namespace DataType;
+    using namespace DataType::SyncUartDev_t;
 
     // Shell I/O UART and Buffer
-    auto& stdio = STM32F4xx::convert(USARTx);
-    DataType::SyncRxBuf_t<16> io_buf;
+    auto stdio = SyncUartDev_t<32> {USARTx};
 
     // LED red, green, blue
     Device::LED_t leds[] = {...};
@@ -132,7 +131,7 @@ namespace MOS::User::BSP
 ```C++
 namespace MOS::User::App
 {
-    // Blinky by Task::delay()
+    // Blinky by Task::delay() -> Thread Model
     void red_blink(Device::LED_t leds[])
     {
         while (true) {
@@ -141,7 +140,7 @@ namespace MOS::User::App
         }
     }
 
-    // Blinky by Async::delay()
+    // Blinky by Async::delay() -> Coroutine Model
     Async::Future_t<void> blue_blink(Device::LED_t leds[])
     {
         while (true) {
@@ -157,21 +156,20 @@ int main()
 {
     using namespace MOS;
     using namespace Kernel;
-    using namespace User;
     using namespace User::Global;
 
-    BSP::config(); // Init hardware and clocks
+    BSP::config(); // Init periphs and clocks
 
-    Task::create( // Create Calendar with RTC
+    Task::create( // Create a calendar with RTC
         App::time_init, nullptr, 0, "time/init"
     );
 
-    Task::create( // Create Shell with buffer
+    Task::create( // Create a shell on stdio
         Shell::launch, &stdio.buf, 1, "shell"
     );
 
     /* User Tasks */
-    Task::create(App::led_init, &leds, 2, "led/init");
+    Task::create(App::red_blink, &leds, 2, "blinky");
     ...
 
     /* Test examples */
@@ -185,7 +183,7 @@ int main()
 }
 ```
 
-## Boot Up ⚡
+### Boot Up ⚡
 ```plain
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
@@ -200,7 +198,7 @@ o'' )_____//   Build   @ TIME, DATE
 ----------------------------------------
 ```
 
-## Version 🧾
+### Version 🧾
 
 📦 `v0.4`
 
@@ -208,7 +206,7 @@ o'' )_____//   Build   @ TIME, DATE
 >
 > - Adopt `Renode` emulation platform, add stable support for `Cortex-M` series
 > - **[Experimental]** Add scheduler lock `Scheduler::suspend()`
-> - **[Experimental]** Add Asynchronous stackless coroutines `Async::{Future_t, co_await/return}`
+> - **[Experimental]** Add Asynchronous stackless coroutines `Async::{Executor, Future_t, co_await/yield/return}`
 
 
 📦 `v0.3`
@@ -274,7 +272,7 @@ o'' )_____//   Build   @ TIME, DATE
 
 
 
-## References 🛸
+### References 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
@@ -292,10 +290,11 @@ o'' )_____//   Build   @ TIME, DATE
 </p>
 
 ```plain
-"I've seen things you people wouldn't believe.  
-Attack ships on fire off the shoulder of Orion.  
-I watched C-beams glitter in the dark near the Tannhäuser Gate.  
-All those moments will be lost in time, like tears in rain.  
-Time to die."  
-- Roy Batty, Blade Runner (1982)
+"
+ I've seen things you people wouldn't believe.  
+ Attack ships on fire off the shoulder of Orion.  
+ I watched C-beams glitter in the dark near the Tannhäuser Gate.  
+ All those moments will be lost in time, like tears in rain.
+ Time to die.
+" - Roy Batty, Blade Runner (1982)
 ```

@@ -2,48 +2,49 @@
 <img src="pic/word_logo.svg" width="35%">
 </p>
 
-## 简介 🚀
+# MOS Renode
+
+### 简介 🚀
 -  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
 
-**MOS** 是一个实时操作系统（RTOS）项目，包含一个抢占式内核和简易命令行(使用C++编写), 并移植了一些应用层组件(例如，**GuiLite** 和 **FatFS**)。
+**MOS** 是一个实时操作系统（RTOS）项目，包含一个抢占式内核和简易命令行(均使用C++编写), 并移植了一些应用层组件(例如 **GuiLite** 和 **FatFS**)。
 
-## 仓库 🌏
-- `mos-core` - 内核与简易命令行, **[链接](https://github.com/Eplankton/mos-core)**
-- `mos-stm32` - 在 STM32 上运行, **[链接](https://github.com/Eplankton/mos-stm32)**
-- `mos-renode` - 使用 Renode 仿真, **[链接](https://github.com/Eplankton/mos-renode)**
+### 仓库 🌏
+- `mos-core` - 内核与简易命令行, **[链接](https://gitee.com/Eplankton/mos-core)**
+- `mos-stm32` - 在 STM32 上运行, **[链接](https://gitee.com/Eplankton/mos-stm32)**
+- `mos-renode` - 使用 Renode 仿真, **[链接](https://gitee.com/Eplankton/mos-renode)**
 
-## 安装 📦
+### 安装 📦
+
 - 运行 `git submodule init && git submodule update` 拉取子模块 `core`
-- 安装 `arm-none-eabi-gcc` 工具链
-- 安装 **[EIDE](https://em-ide.com)** 插件, 使用 `VS Code` 打开 `*.code-workspace`, 执行 `Build` 编译脚本
-- 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径
-- 运行 `bash ./run.sh emulation/*.resc` 开始仿真, 输入`s`启动, `q`退出
-- 打开 `TCP` 连接 `localhost:3333/3334`, 观察串口的输出
+- 安装 **[EIDE](https://em-ide.com)** 插件和 `arm-none-eabi-gcc` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
+- 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径或环境变量
+- 运行 `开始调试` 或 `F5` 启动仿真, 打开 `TCP` 连接 `localhost:3333`, 观察串口的输出
 
-## 文档 📚
+### 文档 📚
 
-- **[用户手册(中文)](manual_zh.pdf) | [Manual(English)](in progress)**
+- **[用户手册(中文)](manual_zh.pdf) | [Manual(English) coming soon...]()**
 
 
-## 架构 🔍
+### 架构 🔍
 <img src="pic/mos_arch.svg">
 
-```C++
+```
 .
 ├── 📁 emulation             // Renode 仿真脚本
-├── 📁 vendor                // 硬件抽象层(SPL/HAL/LL/...)
+├── 📁 vendor                // 硬件抽象层
 ├── 📁 core
 │   ├── 📁 arch              // 架构相关
 │   │   └── cpu.hpp          // 初始化/上下文切换
 │   │
-│   ├── 📁 kernel            // 内核层(架构无关)
+│   ├── 📁 kernel            // 内核层
 │   │   ├── macro.hpp        // 内核常量宏
 │   │   ├── type.hpp         // 基础类型
-│   │   ├── concepts.hpp     // 类型约束(可选)
+│   │   ├── concepts.hpp     // 类型约束
 │   │   ├── data_type.hpp    // 基本数据结构
 │   │   ├── alloc.hpp        // 内存管理
 │   │   ├── global.hpp       // 内核层全局变量
-│   │   ├── printf.h/.c      // 线程安全的 printf(参考开源实现)
+│   │   ├── printf.h/.c      // 线程安全的 printf
 │   │   ├── task.hpp         // 任务控制
 │   │   ├── sync.hpp         // 同步原语
 │   │   ├── async.hpp        // 异步协程
@@ -60,7 +61,7 @@
     └── test.hpp             // 测试代码
 ```
 
-## 示例 🍎
+### 示例 🍎
 - `Shell交互`
 ![shell_demo](pic/shell.gif)
 
@@ -94,11 +95,10 @@ namespace MOS::User::Global
 {
     using namespace HAL::STM32F4xx;
     using namespace Driver::Device;
-    using namespace DataType;
+    using namespace DataType::SyncUartDev_t;
 
     // Shell I/O UART and Buffer
-    auto& stdio = STM32F4xx::convert(USARTx);
-    DataType::SyncRxBuf_t<16> io_buf;
+    auto stdio = SyncUartDev_t<32> {USARTx};
 
     // LED red, green, blue
     Device::LED_t leds[] = {...};
@@ -131,7 +131,7 @@ namespace MOS::User::BSP
 ```C++
 namespace MOS::User::App
 {
-    // Blinky by Task::delay()
+    // Blinky by Task::delay() -> Thread Model
     void red_blink(Device::LED_t leds[])
     {
         while (true) {
@@ -140,7 +140,7 @@ namespace MOS::User::App
         }
     }
 
-    // Blinky by Async::delay()
+    // Blinky by Async::delay() -> Coroutine Model
     Async::Future_t<void> blue_blink(Device::LED_t leds[])
     {
         while (true) {
@@ -156,21 +156,20 @@ int main()
 {
     using namespace MOS;
     using namespace Kernel;
-    using namespace User;
     using namespace User::Global;
 
-    BSP::config(); // Init hardware and clocks
+    BSP::config(); // Init periphs and clocks
 
-    Task::create( // Create Calendar with RTC
+    Task::create( // Create a calendar with RTC
         App::time_init, nullptr, 0, "time/init"
     );
 
-    Task::create( // Create Shell with stdio.buf
+    Task::create( // Create a shell on stdio
         Shell::launch, &stdio.buf, 1, "shell"
     );
 
     /* User Tasks */
-    Task::create(App::led_init, &leds, 2, "led/init");
+    Task::create(App::red_blink, &leds, 2, "blinky");
     ...
 
     /* Test examples */
@@ -184,7 +183,7 @@ int main()
 }
 ```
 
-## 启动 ⚡
+### 启动 ⚡
 ```plain
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
@@ -199,15 +198,15 @@ o'' )_____//   Build   @ TIME, DATE
 ----------------------------------------
 ```
 
-## 版本 📜
+### 版本 📜
 
 📦 `v0.4`
 
 > ✅ 完成：
 >
-> - 平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
+> - 开发平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
 > - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
-> - **[实验性]** 添加异步无栈协程 `Async::{Future_t, co_await/return}`
+> - **[实验性]** 添加异步无栈协程 `Async::{Executor, Future_t, co_await/yield/return}`
 
 
 📦 `v0.3`
@@ -272,7 +271,7 @@ o'' )_____//   Build   @ TIME, DATE
 > - 移植到其他开发板/架构，例如 `ESP32-C3(RISC-V)`
 
 
-## 参考资料 🛸
+### 参考资料 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
@@ -290,10 +289,11 @@ o'' )_____//   Build   @ TIME, DATE
 </p>
 
 ```plain
-"I've seen things you people wouldn't believe.  
-Attack ships on fire off the shoulder of Orion.  
-I watched C-beams glitter in the dark near the Tannhäuser Gate.  
-All those moments will be lost in time, like tears in rain.  
-Time to die."  
-- Roy Batty, Blade Runner (1982)
+"
+ I've seen things you people wouldn't believe.  
+ Attack ships on fire off the shoulder of Orion.  
+ I watched C-beams glitter in the dark near the Tannhäuser Gate.  
+ All those moments will be lost in time, like tears in rain.
+ Time to die.
+" - Roy Batty, Blade Runner (1982)
 ```

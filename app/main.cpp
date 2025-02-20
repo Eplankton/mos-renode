@@ -21,6 +21,8 @@ namespace MOS::User::Global
 		Port_t port;
 		Buf_t buf;
 
+		inline static constexpr auto max_size() { return N; }
+
 		void read_line(auto&& oops)
 		{
 			// read data register not exmpty
@@ -41,7 +43,7 @@ namespace MOS::User::Global
 		}
 	};
 
-	// Serial Input/Output UART
+	// Serial I/O UART with buffer
 	auto stdio = SyncUartDev_t<SHELL_BUF_SIZE> {USART2};
 }
 
@@ -175,10 +177,22 @@ namespace MOS::BSP
 		/* Set SysTick = 1ms */
 		SysTick_Config(SystemCoreClock / MOS_CONF_SYSTICK);
 
-		/* init peripheral */
+		/* Configure peripherals */
 		LED_Config();
 		UART_Config();
 	}
+}
+
+namespace MOS::User::App
+{
+	using namespace Kernel;
+
+	auto led_test = [] {
+		while (true) {
+			LED_Toggle();
+			Task::delay(500_ms);
+		}
+	};
 }
 
 int main()
@@ -190,10 +204,14 @@ int main()
 
 	BSP::config();
 
-	Task::create(Shell::launch, &stdio.buf, 0, "shell");
-	Task::create(Test::AsyncTest, nullptr, 2, "async/test");
-	Task::create(Test::MsgQueueTest, nullptr, 2, "msgq/test");
-	// Task::create(Test::MutexTest, nullptr, 2, "mtx/test");
+	/* User Tasks */
+	Task::create(Shell::launch<stdio.max_size()>, &stdio.buf, 0, "shell");
+	Task::create(App::led_test, nullptr, 1, "led/test");
+
+	/* Test examples */
+	Task::create(Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
+	Task::create(Test::AsyncTest, 500, 2, "async/test");
+	// Task::create(Test::MutexTest, 3, 2, "mutex/test");
 
 	// Start scheduling, never return
 	Scheduler::launch();

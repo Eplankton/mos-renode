@@ -11,7 +11,7 @@ mach create $name
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
 machine LoadPlatformDescription $add_on_repl
 
-nvic Frequency 160000000
+sysbus.nvic Frequency 160000000
 
 # Enable GDB
 machine StartGdbServer 1234
