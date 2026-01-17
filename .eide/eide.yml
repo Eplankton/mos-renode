@@ -1,0 +1,161 @@
+version: "4.1"
+name: mos-renode
+type: ARM
+deviceName: null
+packDir: null
+srcDirs:
+  - vendor
+  - app
+  - core
+virtualFolder:
+  name: <virtual_root>
+  files: []
+  folders: []
+dependenceList: []
+outDir: build
+miscInfo:
+  uid: 6bc8929341c4e189091c2f7a17405290
+targets:
+  Debug:
+    cppPreprocessAttrs:
+      defineList:
+        - STM32F407xx
+        - USE_FULL_LL_DRIVER
+        - USE_HAL_DRIVER
+      incList: []
+      libList: []
+    excludeList: []
+    toolchain: GCC
+    toolchainConfigMap:
+      GCC:
+        archExtensions: ""
+        cpuType: Cortex-M4
+        floatingPointHardware: none
+        options:
+          version: 5
+          afterBuildTasks:
+            - name: copy index file
+              abortAfterFailed: false
+              command: bash -c \"cp build/${ConfigName}/compile_commands.json ./build/\"
+              disable: false
+          asm-compiler:
+            ASM_FLAGS: -ffunction-sections -fdata-sections
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=gnu++2b -fno-exceptions -fno-rtti
+            C_FLAGS: -Wno-empty-body
+            language-c: c17
+            language-cpp: c++17
+            one-elf-section-per-data: true
+            one-elf-section-per-function: true
+            optimization: level-debug
+            warnings: all-warnings
+          global:
+            $float-abi-type: softfp
+            misc-control: --specs=nosys.specs --specs=nano.specs
+            output-debug-info: enable
+          linker:
+            $toolName: auto
+            LD_FLAGS: -Wl,--gc-sections
+            LIB_FLAGS: -lm -lsupc++
+            output-format: elf
+            remove-unused-input-sections: true
+        scatterFilePath: ./vendor/STM32F407VGTx_FLASH.ld
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x5000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x10000"
+                startAddr: "0x08000000"
+              tag: IROM
+        useCustomScatterFile: true
+    uploadConfigMap:
+      pyOCD:
+        baseAddr: "0x08000000"
+        bin: .\build\Debug\stm32f4xx_cubemx_demo.hex
+        config: .eide/debug.pyocd.yaml
+        otherCmds: ""
+        speed: 4M
+        targetName: STM32F407VGTX
+    uploader: pyOCD
+  Release:
+    cppPreprocessAttrs:
+      defineList:
+        - STM32F407xx
+        - USE_FULL_LL_DRIVER
+        - USE_HAL_DRIVER
+      incList: []
+      libList: []
+    excludeList: []
+    toolchain: GCC
+    toolchainConfigMap:
+      GCC:
+        cpuType: Cortex-M4
+        floatingPointHardware: none
+        options:
+          version: 5
+          afterBuildTasks:
+            - name: copy index file
+              abortAfterFailed: false
+              command: bash -c \"cp build/${ConfigName}/compile_commands.json ./build/\"
+              disable: false
+          asm-compiler:
+            ASM_FLAGS: -ffunction-sections -fdata-sections
+          beforeBuildTasks: []
+          c/cpp-compiler:
+            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=gnu++2b -fno-exceptions -fno-rtti -flto
+            C_FLAGS: -Wno-empty-body -Wno-deprecated-volatile
+            language-c: c17
+            language-cpp: c++17
+            one-elf-section-per-data: true
+            one-elf-section-per-function: true
+            optimization: level-size
+            warnings: all-warnings
+          global:
+            $float-abi-type: softfp
+            misc-control: --specs=nosys.specs --specs=nano.specs
+            output-debug-info: enable
+          linker:
+            $toolName: auto
+            LD_FLAGS: -Wl,--gc-sections
+            LIB_FLAGS: -lm -lsupc++
+            output-format: elf
+            remove-unused-input-sections: true
+        scatterFilePath: ./vendor/STM32F407VGTx_FLASH.ld
+        storageLayout:
+          RAM:
+            - id: 1
+              isChecked: true
+              mem:
+                size: "0x5000"
+                startAddr: "0x20000000"
+              noInit: false
+              tag: IRAM
+          ROM:
+            - id: 1
+              isChecked: true
+              isStartup: true
+              mem:
+                size: "0x10000"
+                startAddr: "0x08000000"
+              tag: IROM
+        useCustomScatterFile: true
+    uploadConfigMap:
+      pyOCD:
+        baseAddr: "0x08000000"
+        bin: .\build\Debug\stm32f4xx_cubemx_demo.hex
+        config: .eide/release.pyocd.yaml
+        otherCmds: ""
+        speed: 4M
+        targetName: STM32F407VGTX
+    uploader: pyOCD

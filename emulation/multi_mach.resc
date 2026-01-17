@@ -3,7 +3,7 @@
 
 # Replace to your path
 $add_on_repl?=$CWD/emulation/add_on.repl
-$bin_path?=$CWD/build/Release/mos-renode.elf
+$bin_path?=$CWD/build/mos-renode.elf
 
 $name1?="M1"
 $name2?="M2"

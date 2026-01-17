@@ -1,32 +1,44 @@
-<p align="center">
-<img src="pic/word_logo.svg" width="35%">
-</p>
+<h3 align="center">
+<img src="pic/mos-line.svg" width="25%">
 
-# MOS Renode
+**MOS** @ <a href="https://github.com/renode/renode?tab=readme-ov-file#installation">Renode</a>
+    
+<a href="https://github.com/Eplankton/mos-stm32/stargazers"><img src="https://img.shields.io/github/stars/Eplankton/mos-stm32?colorA=363a4f&colorB=8aadf4&style=for-the-badge"></a>
+<a href="https://github.com/Eplankton/mos-renode/commits"><img src="https://img.shields.io/github/last-commit/Eplankton/mos-renode?colorA=363a4f&colorB=f5a97f&style=for-the-badge"></a>
+<a href="https://github.com/Eplankton/mos-stm32/contributors"><img src="https://img.shields.io/github/contributors/Eplankton/mos-stm32?colorA=363a4f&colorB=a6da95&style=for-the-badge"></a>
+<a href="https://github.com/Eplankton/mos-stm32/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Eplankton/mos-stm32?colorA=363a4f&colorB=ed8796&style=for-the-badge"></a>
+</h3>
 
-### 简介 🚀
--  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
+## 简介 🚀
+-  **[中文](https://gitee.com/Eplankton/mos-renode) | [English](https://github.com/Eplankton/mos-renode)**
 
-**MOS** 是一个实时操作系统（RTOS）项目，包含一个抢占式内核和简易命令行(均使用C++编写), 并移植了一些应用层组件(例如 **GuiLite** 和 **FatFS**)。
+**MOS** 是一个用C++编写的实时操作系统 (Real-Time Operating System, RTOS) 项目，包含一个抢占式内核和简易命令行, 并移植了一些应用层组件 (例如：**GuiLite** 和 **FatFS** 等)。
 
-### 仓库 🌏
+## 仓库 🌏
 - `mos-core` - 内核与简易命令行, **[链接](https://gitee.com/Eplankton/mos-core)**
 - `mos-stm32` - 在 STM32 上运行, **[链接](https://gitee.com/Eplankton/mos-stm32)**
-- `mos-renode` - 使用 Renode 仿真, **[链接](https://gitee.com/Eplankton/mos-renode)**
+- `mos-renode` - 使用 Renode 仿真运行, **[链接](https://gitee.com/Eplankton/mos-renode)**
 
-### 安装 📦
+## 启动 📦
 
-- 运行 `git submodule init && git submodule update` 拉取子模块 `core`
-- 安装 **[EIDE](https://em-ide.com)** 插件和 `arm-none-eabi-gcc` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
-- 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径或环境变量
-- 运行 `开始调试` 或 `F5` 启动仿真, 打开 `TCP` 连接 `localhost:3333`, 观察串口的输出
+- ### 使用 CMake
+  - 安装 **CMake** 和 `arm-none-eabi-gcc` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
+  - 运行 `./build.sh`, 调用 **CMake Tools** 编译项目
 
-### 文档 📚
+- ### 使用 EIDE
+  - 运行 `git submodule init && git submodule update` 拉取子模块 `core`
+  - 安装 **[EIDE](https://em-ide.com)** 插件和 `arm-none-eabi-gcc` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
 
-- **[用户手册(中文)](manual_zh.pdf) | [Manual(English) coming soon...]()**
+- ### Renode 仿真
+  - 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径或环境变量
+  - 运行 `开始调试` 或 `F5` 启动仿真, 打开 `TCP` 连接 `localhost:3333`, 观察串口输出
+
+## 文档 📚
+
+- **[用户手册(中文)](manual_zh.pdf) | [Manual(English) from **DeepWiki**](https://deepwiki.com/Eplankton/mos-renode)**
 
 
-### 架构 🔍
+## 架构 🔍
 <img src="pic/mos_arch.svg">
 
 ```
@@ -61,7 +73,7 @@
     └── test.hpp             // 测试代码
 ```
 
-### 示例 🍎
+## 示例 🍎
 - `Shell交互`
 ![shell_demo](pic/shell.gif)
 
@@ -183,30 +195,35 @@ int main()
 }
 ```
 
-### 启动 ⚡
+## 启动 ⚡
 ```plain
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
- (_(_/--(_/    2023-2025 Copyright by Eplankton
+ (_(_/--(_/    2023-2026 Copyright by Eplankton
 
-<Tid> <Name> <Priority> <Status>  <Mem%>
-----------------------------------------
- #0    idle     15       READY      10%
- #1    shell     1       BLOCKED    21%
- #2    led0      2       RUNNING     9%
-----------------------------------------
+<Tid> <Name> <Priority> <Status> <Mem%>
+---------------------------------------
+ #0    idle     15       READY     10%
+ #1    shell     1       BLOCKED   21%
+ #2    blinky    2       RUNNING    9%
+---------------------------------------
 ```
 
-### 版本 📜
+## 开发进展 📜
 
 📦 `v0.4`
 
 > ✅ 完成：
->
+> - 可使用 **CMake Tools** 编译项目
 > - 开发平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
 > - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
-> - **[实验性]** 添加异步无栈协程 `Async::{Executor, Future_t, co_await/yield/return}`
+> - **[实验性]** 添加异步无栈(Stackless)协程 `Async::{Executor, Future_t, co_await/yield/return}`
+>
+> 📌 计划： 
+>
+> - 从 `FatFS` 迁移到 `LittleFS`
+
 
 
 📦 `v0.3`
@@ -222,8 +239,6 @@ o'' )_____//   Build   @ TIME, DATE
 > - **[实验性]** 原子类型 `<stdatomic.h>`
 > - **[实验性]** `Utils::IrqGuard_t`，嵌套中断临界区
 > - **[实验性]** `Scheduler + Mutex` 简单的形式化验证
->
-> 
 >
 > 📌 计划： 
 >
@@ -271,7 +286,7 @@ o'' )_____//   Build   @ TIME, DATE
 > - 移植到其他开发板/架构，例如 `ESP32-C3(RISC-V)`
 
 
-### 参考资料 🛸
+## 参考资料 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
@@ -284,16 +299,16 @@ o'' )_____//   Build   @ TIME, DATE
 - [Embassy](https://embassy.dev/)
 - [Renode](https://renode.io/)
 
+---
+
 <p align="center">
-<img src="pic/osh-zh-en.svg">
+<img src="pic/osh-long-grey.svg">
+<img src="pic/osh-en.svg" width="75%">
 </p>
 
 ```plain
-"
- I've seen things you people wouldn't believe.  
- Attack ships on fire off the shoulder of Orion.  
- I watched C-beams glitter in the dark near the Tannhäuser Gate.  
- All those moments will be lost in time, like tears in rain.
- Time to die.
-" - Roy Batty, Blade Runner (1982)
+I hope the Pacific is as blue as it has been in my dreams. 
+I hope.
+
+-- Stephen King's "Rita Hayworth and the Shawshank Redemption", 1982
 ```

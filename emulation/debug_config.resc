@@ -4,7 +4,7 @@
 # Replace to your path
 $name?="STM32F4_Discovery"
 $add_on_repl?=$CWD/emulation/add_on.repl
-$bin_path?=$CWD/build/Release/mos-renode.elf
+$bin_path?=$CWD/build/mos-renode.elf
 
 # Create Machine & Load config
 mach create $name

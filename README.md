@@ -1,32 +1,44 @@
-<p align="center">
-<img src="pic/word_logo.svg" width="35%">
-</p>
+<h3 align="center">
+<img src="pic/mos-paint.svg" width="25%">
 
-# MOS Renode
+**MOS** @ <a href="https://github.com/renode/renode?tab=readme-ov-file#installation">Renode</a>
+    
+<a href="https://github.com/Eplankton/mos-stm32/stargazers"><img src="https://img.shields.io/github/stars/Eplankton/mos-stm32?colorA=363a4f&colorB=8aadf4&style=for-the-badge"></a>
+<a href="https://github.com/Eplankton/mos-renode/commits"><img src="https://img.shields.io/github/last-commit/Eplankton/mos-renode?colorA=363a4f&colorB=f5a97f&style=for-the-badge"></a>
+<a href="https://github.com/Eplankton/mos-stm32/contributors"><img src="https://img.shields.io/github/contributors/Eplankton/mos-stm32?colorA=363a4f&colorB=a6da95&style=for-the-badge"></a>
+<a href="https://github.com/Eplankton/mos-stm32/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Eplankton/mos-stm32?colorA=363a4f&colorB=ed8796&style=for-the-badge"></a>
+</h3>
 
-### About 🚀
+## About 🚀
 -  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
 
-**MOS** is a Real-Time Operating System (RTOS) project consists of a preemptive kernel and a command-line shell(both in C++) with application components(e.g., **GuiLite** and **FatFS**).
+**MOS** is a Real-Time Operating System (RTOS) project built in C++, which consists of a preemptive kernel and a command-line shell with other applications (e.g., **GuiLite** and **FatFS**).
 
-### Repository 🌏
+## Repository 🌏
 - `mos-core` - The kernel and the shell, check **[here](https://github.com/Eplankton/mos-core)**.
 - `mos-stm32` - Running on STM32 series, check **[here](https://github.com/Eplankton/mos-stm32)**.
 - `mos-renode` - Testing on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
 
-### Start 📦
+## Start 📦
 
-- Run `git submodule init && git submodule update` to pull the submodule `core`.
-- Install the **[EIDE](https://em-ide.com)** plugin and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
-- Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** simulation platform, and add `renode` to the `/usr/bin` path or environment variables.
-- Run `Start Debugging` or press `F5` to start the simulation, open a `TCP` connection to `localhost:3333`, and observe the serial port output.
+- ### Use CMake
+  - Install the **CMake** and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
+  - Run `./build.sh` to call **CMake Tools** to build the project.
 
-### Manual 📚
+- ### Use EIDE
+  - Run `git submodule init && git submodule update` to pull the submodule `core`.
+  - Install **[EIDE](https://em-ide.com)** extension and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
 
-- **[用户手册(中文)](manual_zh.pdf) | [Manual(English) coming soon...]()**
+- ### Renode Emulation
+  - Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** platform, and add `renode` to the `/usr/bin` path or environment variables.
+  - Run `Start Debugging` or press `F5` to start, open a `TCP` connection on `localhost:3333`, and observe the serial output.
 
 
-### Architecture 🔍
+## Manual 📚
+
+-  [Manual(English) from **DeepWiki**](https://deepwiki.com/Eplankton/mos-renode) | [**用户手册(中文)**](manual_zh.pdf)
+
+## Architecture 🔍
 <img src="pic/mos_arch.svg">
 
 ```
@@ -61,7 +73,7 @@
     └── test.hpp             // Test Code
 ```
 
-### Example 🍎
+## Example 🍎
 `Shell Test`
 ![shell_demo](pic/shell.gif)
 
@@ -183,31 +195,35 @@ int main()
 }
 ```
 
-### Boot Up ⚡
+## Boot Up ⚡
 ```plain
  A_A       _   Version @ x.x.x(...)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
- (_(_/--(_/    2023-2025 Copyright by Eplankton
+ (_(_/--(_/    2023-2026 Copyright by Eplankton
 
-<Tid> <Name> <Priority> <Status>  <Mem%>
-----------------------------------------
- #0    idle     15       READY      10%
- #1    shell     1       BLOCKED    21%
- #2    led0      2       RUNNING     9%
-----------------------------------------
+<Tid> <Name> <Priority> <Status> <Mem%>
+---------------------------------------
+ #0    idle     15       READY     10%
+ #1    shell     1       BLOCKED   21%
+ #2    blinky    2       RUNNING    9%
+---------------------------------------
 ```
 
-### Version 🧾
+## RoadMap 🧾
 
 📦 `v0.4`
 
 > ✅ Done：
 >
+> - **CMake Tools** are now available for compiling the project
 > - Adopt `Renode` emulation platform, add stable support for `Cortex-M` series
 > - **[Experimental]** Add scheduler lock `Scheduler::suspend()`
 > - **[Experimental]** Add Asynchronous stackless coroutines `Async::{Executor, Future_t, co_await/yield/return}`
-
+>
+> 📌 Planned: 
+>
+> - Shift from `FatFS` to `LittleFS`
 
 📦 `v0.3`
 
@@ -222,8 +238,6 @@ o'' )_____//   Build   @ TIME, DATE
 > - **[Experimental]** Atomic types `<stdatomic.h>`
 > - **[Experimental]** `Utils::IrqGuard_t`, nested interrupt critical sections
 > - **[Experimental]** Simple formal verification of `Scheduler + Mutex`
->
-> 
 >
 > 📌 Planned: 
 >
@@ -272,7 +286,7 @@ o'' )_____//   Build   @ TIME, DATE
 
 
 
-### References 🛸
+## References 🛸
 - [How to build a Real-Time Operating System(RTOS)](https://medium.com/@dheeptuck/building-a-real-time-operating-system-rtos-ground-up-a70640c64e93)
 - [PeriodicScheduler_Semaphore](https://github.com/Dungyichao/PeriodicScheduler_Semaphore)
 - [STM32F4-LCD_ST7735s](https://github.com/Dungyichao/STM32F4-LCD_ST7735s)
@@ -285,16 +299,16 @@ o'' )_____//   Build   @ TIME, DATE
 - [Embassy](https://embassy.dev/)
 - [Renode](https://renode.io/)
 
+---
+
 <p align="center">
-<img src="pic/osh-zh-en.svg">
+<img src="pic/osh-long-grey.svg">
+<img src="pic/osh-en.svg" width="75%">
 </p>
 
 ```plain
-"
- I've seen things you people wouldn't believe.  
- Attack ships on fire off the shoulder of Orion.  
- I watched C-beams glitter in the dark near the Tannhäuser Gate.  
- All those moments will be lost in time, like tears in rain.
- Time to die.
-" - Roy Batty, Blade Runner (1982)
+I hope the Pacific is as blue as it has been in my dreams. 
+I hope.
+
+-- Stephen King's "Rita Hayworth and the Shawshank Redemption", 1982
 ```

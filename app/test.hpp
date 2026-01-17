@@ -16,8 +16,11 @@ namespace MOS::User::Test
 			auto cur = Task::current();
 			while (true) {
 				mutex.hold([&] {
-					for (auto _: Range(0, 5)) {
-						kprintf("Mutex(%d => %d) holds...\n", cur->old_pri, cur->pri);
+					for (auto i: Range(0, 5)) {
+						kprintf(
+						    "Mutex(%d => %d), [%d] locked\n",
+						    cur->sub_pri, cur->pri, i + 1
+						);
 						Task::delay(100_ms);
 					}
 				});
@@ -35,10 +38,10 @@ namespace MOS::User::Test
 		Task::create(launch, scale, Macro::PRI_MAX, "mutex/test");
 	}
 
-	template <size_t LEN>
+	template <size_t NUM>
 	void MsgQueueTest()
 	{
-		using MsgQ_t = IPC::MsgQueue_t<int, LEN>;
+		using MsgQ_t = IPC::MsgQueue_t<int, NUM>;
 
 		static auto producer = [](MsgQ_t& msg_q) {
 			uint32_t i = Task::current()->get_pri();
@@ -58,26 +61,23 @@ namespace MOS::User::Test
 		};
 
 		static auto launch = [] {
-			static MsgQ_t msg_q; // Create a static MsgQueue
-
-			auto x = Sync::Mutex_t {IPC::Queue_t<int, 3> {}};
-			x.lock().get().push(123);
-
-			constexpr Task::Prior_t base_pri = LEN + 1; // Set base priority
-
-			Task::create(consumer, &msg_q, base_pri, "recv"); // Create a Consumer
+			static MsgQ_t channel; // Create a static MsgQueue
+			constexpr Task::Prior_t base_pri = NUM + 1; // Set base priority
+			Task::create(consumer, &channel, base_pri, "recv"); // Create a Consumer
 
 			for (auto p = base_pri; p <= base_pri * 2; p += 1) {
-				Task::create(producer, &msg_q, p, "send"); // Create multiple Producers
+				Task::create(producer, &channel, p, "send"); // Create multiple Producers
 			}
 		};
 
 		Task::create(launch, nullptr, Macro::PRI_MAX, "msg_q/test");
 	}
 
-	void AsyncTest(size_t scale)
+	void AsyncTest(const size_t scale)
 	{
-		auto sum_worker = [&](size_t n) -> Async::Future_t<int> {
+		using Async::Future_t;
+
+		auto sum_worker = [](const size_t n) -> Future_t<int> {
 			uint32_t result = 0;
 			for (uint32_t i = 0; i < n; i += 1) {
 				result += i;
@@ -86,12 +86,12 @@ namespace MOS::User::Test
 			co_return result;
 		};
 
-		auto sum = [&](size_t n) -> Async::Future_t<> {
-			LOG("Recv sum(%d) => %d", n, co_await sum_worker(n));
+		auto sum = [&](const size_t n) -> Future_t<> {
+			LOG("sum(%d) => %d", n, co_await sum_worker(n));
 		};
 
 		// launch all coroutines
-		for (auto k = scale; k > 0; k -= 1) {
+		for (size_t k = scale; k > 0; k -= 1) {
 			auto fut = sum(k); // lazy calculation
 		}
 	}
