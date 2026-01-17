@@ -15,7 +15,7 @@
         {
             "name": "Cortex Debug",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build/Debug/${workspaceFolderBasename}.elf",
+            "executable": "${workspaceRoot}/build/${workspaceFolderBasename}.elf",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "external",
@@ -23,7 +23,15 @@
             "gdbPath": "arm-none-eabi-gdb",
             "preLaunchTask": "Run Renode",
             "postDebugTask": "Close Renode",
-            "runToEntryPoint": "main"
+            "runToEntryPoint": "main",
+            "loadFiles": [
+                "${workspaceRoot}/build/${workspaceFolderBasename}.elf"
+            ],
+            "symbolFiles": [
+                {
+                    "file": "${workspaceRoot}/build/${workspaceFolderBasename}.elf"
+                }
+            ],
         }
     ]
 }

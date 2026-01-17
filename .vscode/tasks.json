@@ -50,6 +50,19 @@
             }
         },
         {
+            "label": "CMake Build",
+            "type": "shell",
+            "command": "./build.sh",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
             "label": "Run Renode",
             "type": "shell",
             "command": "renode",
@@ -58,7 +71,8 @@
                 "${workspaceFolder}/emulation/debug_config.resc" // Add the script for emulation
             ],
             "dependsOn": [
-                "Build application"
+                // "Build application"
+                "CMake Build"
             ],
             "isBackground": true,
             "problemMatcher": {
@@ -80,7 +94,7 @@
         },
         {
             "label": "Close Renode",
-            "command": "echo ${input:terminate}",
+            "command": "exit",
             "type": "shell",
             "problemMatcher": []
         }
