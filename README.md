@@ -6,7 +6,7 @@
 <a href="https://github.com/Eplankton/mos-stm32/contributors"><img src="https://img.shields.io/github/contributors/Eplankton/mos-stm32?colorA=363a4f&colorB=a6da95&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-renode/commits"><img src="https://img.shields.io/github/last-commit/Eplankton/mos-renode?colorA=363a4f&colorB=f5a97f&style=for-the-badge"></a>
 
-[**English**](https://github.com/Eplankton/mos-renode) | [**中文**](https://gitee.com/Eplankton/mos-renode)
+[**English**](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)
 
 </h3>
 
@@ -27,7 +27,7 @@
 
 - ### Use CMake
   - Install the **CMake** and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
-  - Run `./build.sh` to call **CMake Tools** to build the project.
+  - Run `./build.sh` to call **CMake Tools** and build the project.
 
 - ### Use EIDE
   - Run `git submodule init && git submodule update` to pull the submodule `core`.
