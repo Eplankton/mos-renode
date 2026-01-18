@@ -26,17 +26,40 @@ set(CORE_DIR "${CMAKE_SOURCE_DIR}/core")
 set(ETL_DIR "${CORE_DIR}/external/etl")
 
 if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
-    # check if 'core' is populated OR if 'etl' inside core is populated
+    # Check if 'core' is populated OR if 'etl' inside core is populated
     if(NOT EXISTS "${CORE_DIR}/kernel/printf.c" OR NOT EXISTS "${ETL_DIR}/CMakeLists.txt")
         message(STATUS "Submodules missing. Initializing recursively...")
         
-        # This one command handles initializing 'core' AND any submodules defined inside 'core'
+        # Standard initialization: Pull the specific commit recorded in the superproject
         execute_process(
             COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             RESULT_VARIABLE git_res
         )
         
+        # Update to Master: If initialization succeeded, force 'core' to latest master
+        if(git_res EQUAL 0)
+            message(STATUS "Switching 'core' submodule to latest master branch...")
+            
+            # Switch 'core' from detached HEAD to master branch
+            execute_process(
+                COMMAND ${GIT_EXECUTABLE} checkout master
+                WORKING_DIRECTORY ${CORE_DIR}
+            )
+
+            # Pull the latest changes from remote master
+            execute_process(
+                COMMAND ${GIT_EXECUTABLE} pull origin master
+                WORKING_DIRECTORY ${CORE_DIR}
+            )
+
+            # Update nested submodules inside 'core' (in case master has new dependencies)
+            execute_process(
+                COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                WORKING_DIRECTORY ${CORE_DIR}
+            )
+        endif()
+
         # Fallback: If 'etl' was never added to 'core' as a submodule, add it now
         if(EXISTS "${CORE_DIR}" AND NOT EXISTS "${ETL_DIR}/CMakeLists.txt")
             message(STATUS "Adding ETL as nested submodule in core...")
@@ -58,7 +81,7 @@ set(MCU_FLAGS -mcpu=cortex-m4 -mfloat-abi=soft -mthumb)
 # ETL is added first to ensure etl::etl target is available
 add_subdirectory(${ETL_DIR})
 
-# Sources grouping
+# Source grouping
 file(GLOB_RECURSE DRIVER_SOURCES 
     "vendor/Core/Src/*.c" 
     "vendor/Drivers/STM32F4xx_HAL_Driver/Src/*.c"
@@ -70,7 +93,6 @@ add_executable(${TARGET_NAME}.elf
     app/main.cpp
     vendor/startup_stm32f407xx.s
     ${DRIVER_SOURCES}
-    ${LINKER_SCRIPT}
 )
 
 # Compile options & Standards
