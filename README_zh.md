@@ -6,12 +6,11 @@
 <a href="https://github.com/Eplankton/mos-stm32/contributors"><img src="https://img.shields.io/github/contributors/Eplankton/mos-stm32?colorA=363a4f&colorB=a6da95&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-renode/commits"><img src="https://img.shields.io/github/last-commit/Eplankton/mos-renode?colorA=363a4f&colorB=f5a97f&style=for-the-badge"></a>
 
-<a href="https://github.com/Eplankton/mos-stm32/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Eplankton/mos-stm32?colorA=363a4f&colorB=ed8796&style=for-the-badge"></a>
+[**中文**](https://gitee.com/Eplankton/mos-renode) | [**English**](https://github.com/Eplankton/mos-renode)
 
 </h3>
 
 ## 简介 🚀
-**[中文](https://gitee.com/Eplankton/mos-renode) | [English](https://github.com/Eplankton/mos-renode)**
 
 - **MOS** 是一个用 C++ 编写的实时操作系统 (Real-Time Operating System, RTOS) 项目，包含一个抢占式内核和简易命令行, 并移植了一些应用层组件 (例如：**GuiLite** 和 **FatFS** 等)。
 
