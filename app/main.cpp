@@ -210,7 +210,7 @@ int main()
 
 	/* Test examples */
 	Task::create(Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
-	Task::create(Test::AsyncTest, 500, 2, "async/test");
+	Task::create(Test::AsyncTest, 100, 2, "async/test");
 	// Task::create(Test::MutexTest, 3, 2, "mutex/test");
 
 	// Start scheduling, never return

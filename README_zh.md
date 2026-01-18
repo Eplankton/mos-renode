@@ -1,7 +1,5 @@
 <h3 align="center">
 <img src="pic/mos-line.png" width="25%">
-
-**MOS** @ <a href="https://github.com/renode/renode?tab=readme-ov-file#installation">Renode</a>
     
 <a href="https://github.com/Eplankton/mos-stm32/stargazers"><img src="https://img.shields.io/github/stars/Eplankton/mos-stm32?colorA=363a4f&colorB=b7bdf8&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-stm32/network/members"><img src="https://img.shields.io/github/forks/Eplankton/mos-stm32?colorA=363a4f&colorB=c6a0f6&style=for-the-badge"></a>
@@ -13,9 +11,11 @@
 </h3>
 
 ## 简介 🚀
--  **[中文](https://gitee.com/Eplankton/mos-renode) | [English](https://github.com/Eplankton/mos-renode)**
+**[中文](https://gitee.com/Eplankton/mos-renode) | [English](https://github.com/Eplankton/mos-renode)**
 
-**MOS** 是一个用C++编写的实时操作系统 (Real-Time Operating System, RTOS) 项目，包含一个抢占式内核和简易命令行, 并移植了一些应用层组件 (例如：**GuiLite** 和 **FatFS** 等)。
+- **MOS** 是一个用 C++ 编写的实时操作系统 (Real-Time Operating System, RTOS) 项目，包含一个抢占式内核和简易命令行, 并移植了一些应用层组件 (例如：**GuiLite** 和 **FatFS** 等)。
+
+- [**Renode**](https://renode.io/) 由 [**Antmicro**](https://antmicro.com/) 创建，是一款用于多节点嵌入式网络（有线和无线）的虚拟化平台，旨在实现可扩展的工作流程，开发有效、经过测试且安全的物联网系统。
 
 ## 仓库 🌏
 - `mos-core` - 内核与简易命令行, **[链接](https://gitee.com/Eplankton/mos-core)**
@@ -49,6 +49,7 @@
 ├── 📁 emulation             // Renode 仿真脚本
 ├── 📁 vendor                // 硬件抽象层
 ├── 📁 core
+│   ├── 📁 external          // 外部库
 │   ├── 📁 arch              // 架构相关
 │   │   └── cpu.hpp          // 初始化/上下文切换
 │   │
@@ -219,9 +220,10 @@ o'' )_____//   Build   @ TIME, DATE
 
 > ✅ 完成：
 > - 可使用 **CMake Tools** 编译项目
+> - 引入外部库 [**ETL**](https://www.etlcpp.com/)，嵌入式 C++ 模板库
 > - 开发平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
 > - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
-> - **[实验性]** 添加异步无栈(Stackless)协程 `Async::{Executor, Future_t, co_await/yield/return}`
+> - **[实验性]** 添加异步无栈(Stackless)协程 `Async::{Executor, Future_t, co_await...}`
 >
 > 📌 计划： 
 >
@@ -301,7 +303,7 @@ o'' )_____//   Build   @ TIME, DATE
 - [Eclipse ThreadX](https://github.com/eclipse-threadx/threadx)
 - [Embassy](https://embassy.dev/)
 - [Renode](https://renode.io/)
-
+- [Embedded Template Library (ETL)](https://www.etlcpp.com)
 ---
 
 <p align="center">

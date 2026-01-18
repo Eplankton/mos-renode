@@ -11,9 +11,13 @@
 </h3>
 
 ## About 🚀
--  **[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
+**[English](https://github.com/Eplankton/mos-renode) | [中文](https://gitee.com/Eplankton/mos-renode)**
 
-**MOS** is a Real-Time Operating System (RTOS) project built in C++, which consists of a preemptive kernel and a command-line shell with other applications (e.g., **GuiLite** and **FatFS**).
+- **MOS** is a Real-Time Operating System (RTOS) project built in C++, which consists of a preemptive kernel and a command-line shell with other applications (e.g., **GuiLite** and **FatFS**).
+
+- [**Renode**](https://renode.io/) was created by [**Antmicro**](https://antmicro.com/) as a virtual development tool for multi-node embedded networks (both wired and wireless) and is intended to enable a scalable workflow for creating effective, tested and secure IoT systems.
+
+
 
 ## Repository 🌏
 - `mos-core` - The kernel and the shell, check **[here](https://github.com/Eplankton/mos-core)**.
@@ -47,6 +51,7 @@
 ├── 📁 emulation             // Renode emulation script
 ├── 📁 vendor                // Vendor HALs
 ├── 📁 core
+│   ├── 📁 external          // External Library
 │   ├── 📁 arch              // Architecture-Specific Code
 │   │   └── cpu.hpp          // Initialization/Context Switch assembly code
 │   │
@@ -218,7 +223,8 @@ o'' )_____//   Build   @ TIME, DATE
 > ✅ Done：
 >
 > - **CMake Tools** are now available for compiling the project
-> - Adopt `Renode` emulation platform, add stable support for `Cortex-M` series
+> - Add external library [**ETL**](https://www.etlcpp.com/), a C++ template library for embedded applications
+> - Add `Renode` emulation platform, add stable support for `Cortex-M` series
 > - **[Experimental]** Add scheduler lock `Scheduler::suspend()`
 > - **[Experimental]** Add Asynchronous stackless coroutines `Async::{Executor, Future_t, co_await/yield/return}`
 >
@@ -299,7 +305,7 @@ o'' )_____//   Build   @ TIME, DATE
 - [Eclipse ThreadX](https://github.com/eclipse-threadx/threadx)
 - [Embassy](https://embassy.dev/)
 - [Renode](https://renode.io/)
-
+- [Embedded Template Library (ETL)](https://www.etlcpp.com)
 ---
 
 <p align="center">

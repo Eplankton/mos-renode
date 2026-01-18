@@ -41,9 +41,9 @@ namespace MOS::User::Test
 	template <size_t NUM>
 	void MsgQueueTest()
 	{
-		using MsgQ_t = IPC::MsgQueue_t<int, NUM>;
+		using MsgQue_t = IPC::MsgQueue_t<int, NUM>;
 
-		static auto producer = [](MsgQ_t& msg_q) {
+		static auto producer = [](MsgQue_t& msg_q) {
 			uint32_t i = Task::current()->get_pri();
 			while (true) {
 				msg_q.send(i++);
@@ -51,7 +51,7 @@ namespace MOS::User::Test
 			}
 		};
 
-		static auto consumer = [](MsgQ_t& msg_q) {
+		static auto consumer = [](MsgQue_t& msg_q) {
 			while (true) {
 				auto [status, msg] = msg_q.recv(200_ms);
 				IrqGuard_t guard;
@@ -61,8 +61,9 @@ namespace MOS::User::Test
 		};
 
 		static auto launch = [] {
-			static MsgQ_t channel; // Create a static MsgQueue
+			static MsgQue_t channel;                    // Create a static MsgQueue
 			constexpr Task::Prior_t base_pri = NUM + 1; // Set base priority
+
 			Task::create(consumer, &channel, base_pri, "recv"); // Create a Consumer
 
 			for (auto p = base_pri; p <= base_pri * 2; p += 1) {
@@ -79,18 +80,29 @@ namespace MOS::User::Test
 
 		auto sum_worker = [](const size_t n) -> Future_t<int> {
 			uint32_t result = 0;
-			for (uint32_t i = 0; i < n; i += 1) {
+			uint32_t rng    = n * 63641362238ULL + 1; // RNG Seed
+
+			for (uint32_t i = 0; i < n; i++) {
 				result += i;
-				co_await Async::delay(1000_ms / n);
+				rng = rng * 63641365ULL + Global::os_ticks; // RNG Generator
+				if ((rng % n) == 0) {
+					co_await Async::delay(1000_ms + 10 * (rng % 13));
+				}
 			}
 			co_return result;
 		};
 
 		auto sum = [&](const size_t n) -> Future_t<> {
-			LOG("sum(%d) => %d", n, co_await sum_worker(n));
+			static size_t cnt = scale;
+
+			int val = co_await sum_worker(n);
+			LOG("sum(%d) => %d", n, val);
+			if (--cnt <= 0) {
+				LOG("All Async Jobs Are Done!");
+			}
 		};
 
-		// launch all coroutines
+		// Launch all coroutines
 		for (size_t k = scale; k > 0; k -= 1) {
 			auto fut = sum(k); // lazy calculation
 		}
