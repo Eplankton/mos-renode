@@ -41,7 +41,7 @@ if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
         if(EXISTS "${CORE_DIR}" AND NOT EXISTS "${ETL_DIR}/CMakeLists.txt")
             message(STATUS "Adding ETL as nested submodule in core...")
             execute_process(
-                COMMAND ${GIT_EXECUTABLE} submodule add https://github.com/ETLCPP/etl.git external/etl
+                COMMAND ${GIT_EXECUTABLE} submodule add -f https://github.com/ETLCPP/etl.git external/etl
                 WORKING_DIRECTORY ${CORE_DIR}
             )
             execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -70,6 +70,7 @@ add_executable(${TARGET_NAME}.elf
     app/main.cpp
     vendor/startup_stm32f407xx.s
     ${DRIVER_SOURCES}
+    ${LINKER_SCRIPT}
 )
 
 # Compile options & Standards
