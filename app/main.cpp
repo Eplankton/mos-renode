@@ -12,23 +12,26 @@ namespace MOS::User::Global
 {
 	using namespace DataType;
 
-	template <size_t N>
-	struct SyncUartDev_t
+	template <size_t N = 32>
+	struct SyncUartHub_t
 	{
 		using Port_t = USART_TypeDef*;
 		using Buf_t  = SyncRxBuf_t<N>;
 
-		Port_t port;
+		Port_t tx, rx;
 		Buf_t buf;
+
+		MOS_INLINE SyncUartHub_t(Port_t port): tx(port), rx(port) {}
+		MOS_INLINE SyncUartHub_t(Port_t _tx, Port_t _rx): rx(_rx), tx(_tx) {}
 
 		inline static constexpr auto max_size() { return N; }
 
 		void read_line(auto&& oops)
 		{
 			// read data register not exmpty
-			if (LL_USART_IsActiveFlag_RXNE(port)) {
+			if (LL_USART_IsActiveFlag_RXNE(rx)) {
 				Utils::IrqGuard_t guard;
-				char8_t data = LL_USART_ReceiveData8(port);
+				char8_t data = LL_USART_ReceiveData8(rx);
 				if (!buf.full()) {
 					if (data == '\n') // read a line
 						buf.signal_from_isr();
@@ -41,10 +44,22 @@ namespace MOS::User::Global
 				}
 			}
 		}
+
+		void send_line(const char msg[])
+		{
+			for (const char* p = msg; *p; ++p) {
+				while (!LL_USART_IsActiveFlag_TXE(tx));
+				LL_USART_TransmitData8(tx, *p);
+			}
+			LL_USART_TransmitData8(tx, '\n');
+		}
 	};
 
-	// Serial I/O UART with buffer
-	auto stdio = SyncUartDev_t<SHELL_BUF_SIZE> {USART2};
+	// Serial I/O UART with buffer (Shell, USART2)
+	auto stdio = SyncUartHub_t<SHELL_BUF_SIZE> {USART2};
+
+	// Machine-to-Machine UART Hub (M2M, USART3)
+	auto hub = SyncUartHub_t {USART3};
 }
 
 namespace MOS::BSP
@@ -86,12 +101,13 @@ namespace MOS::BSP
 
 	void UART_Config(void)
 	{
+		LL_USART_InitTypeDef USART_InitStruct = {0};
+		LL_GPIO_InitTypeDef GPIO_InitStruct   = {0};
+
+		// ================== USART2 Config (Shell) ==================
 		/* Peripheral clock enable */
 		LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
 		LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
-
-		LL_USART_InitTypeDef USART_InitStruct = {0};
-		LL_GPIO_InitTypeDef GPIO_InitStruct   = {0};
 
 		/** USART2 GPIO Configuration
              PD5   ------> USART2_TX
@@ -119,17 +135,34 @@ namespace MOS::BSP
 		LL_USART_Init(USART2, &USART_InitStruct);
 		LL_USART_ConfigAsyncMode(USART2);
 		LL_USART_Enable(USART2);
-
-		// enable interrupts
 		LL_USART_EnableIT_RXNE(USART2);
-		// LL_USART_EnableIT_IDLE(USART2);
-		// LL_USART_EnableIT_ERROR(USART2);
+
+		// ================== USART3 Config (M2M Link) ==================
+
+		/* 1. Enable Clocks */
+		LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART3);
+		LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+
+		/* 2. GPIO Config: PB10 (TX), PB11 (RX) */
+		GPIO_InitStruct.Pin       = LL_GPIO_PIN_10 | LL_GPIO_PIN_11;
+		GPIO_InitStruct.Alternate = LL_GPIO_AF_7; // USART3 AF
+		LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+		/* 3. NVIC Config */
+		NVIC_SetPriority(USART3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 1, 0));
+		NVIC_EnableIRQ(USART3_IRQn);
+
+		/* 4. USART Init (Re-use struct as settings are same: 115200 8N1) */
+		LL_USART_Init(USART3, &USART_InitStruct);
+		LL_USART_ConfigAsyncMode(USART3);
+		LL_USART_Enable(USART3);
+
+		/* 5. Enable Interrupts */
+		LL_USART_EnableIT_RXNE(USART3);
 	}
 
 	/**
      * @brief LED Initialization Function
-     * @param None
-     * @retval None
     */
 	void LED_Config(void)
 	{
@@ -151,21 +184,43 @@ namespace MOS::BSP
 		LL_GPIO_Init(LED_1_GPIO_Port, &GPIO_InitStruct);
 	}
 
-	extern "C" void MOS_PUTCHAR(char ch)
+	/**
+     * @brief ID-Pin (PC0)
+     * PC0 -> Input, Pull-Down
+     */
+	void ID_Config(void)
 	{
-		auto uart = User::Global::stdio.port;
+		LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
-		/* Wait until TXE flag is set to send data */
-		while (!LL_USART_IsActiveFlag_TXE(uart));
-
-		/* Send byte through the USART2 peripheral */
-		LL_USART_TransmitData8(uart, ch);
+		LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin                 = LL_GPIO_PIN_0;
+		GPIO_InitStruct.Mode                = LL_GPIO_MODE_INPUT;
+		GPIO_InitStruct.Pull                = LL_GPIO_PULL_DOWN; // Pull-Down by default, avoid dangling
+		LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 	}
 
-	extern "C" void USART2_IRQHandler()
+	extern "C" void MOS_PUTCHAR(char ch)
+	{
+		auto tx = User::Global::stdio.tx;
+
+		/* Wait until TXE flag is set to send data */
+		while (!LL_USART_IsActiveFlag_TXE(tx));
+
+		/* Send byte through the USART2 peripheral */
+		LL_USART_TransmitData8(tx, ch);
+	}
+
+	extern "C" void USART2_IRQHandler() // For Shell
 	{
 		User::Global::stdio.read_line(
 		    [] { LOG("Oops! Command too long!"); }
+		);
+	}
+
+	extern "C" void USART3_IRQHandler() // For machines' link
+	{
+		User::Global::hub.read_line(
+		    [] { LOG("Oops! UART Shit!"); }
 		);
 	}
 
@@ -179,6 +234,7 @@ namespace MOS::BSP
 
 		/* Configure peripherals */
 		LED_Config();
+		ID_Config();
 		UART_Config();
 	}
 }
@@ -186,12 +242,40 @@ namespace MOS::BSP
 namespace MOS::User::App
 {
 	using namespace Kernel;
+	using namespace User::Global;
 
-	auto led_test = [] {
+	auto led = [] {
 		while (true) {
 			LED_Toggle();
 			Task::delay(500_ms);
 		}
+	};
+
+	template <size_t N>
+	auto m2m = [](SyncUartHub_t<N>& hub) {
+		static auto get_m_id = [] {
+			return LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0) ? 1 : 2;
+		};
+
+		static char msg[]    = "Hello! I'm Mx";
+		msg[sizeof(msg) - 2] = get_m_id() + 48;
+
+		static auto m2m_tx = [](SyncUartHub_t<N>& hub) {
+			while (true) {
+				LOG("%s -> %s", Task::current()->get_name(), msg);
+				hub.send_line(msg); // Send message byte by byte
+				Task::delay(250_ms);
+			}
+		};
+
+		static auto m2m_rx = [](SyncUartHub_t<N>& hub) {
+			while (true) { // Block until line received
+				LOG("%s <- %s", Task::current()->get_name(), hub.buf.recv().as_str());
+			}
+		};
+
+		Task::create(m2m_tx, &hub, Task::current()->get_pri(), "m2m/tx");
+		Task::create(m2m_rx, &hub, Task::current()->get_pri(), "m2m/rx");
 	};
 }
 
@@ -206,11 +290,12 @@ int main()
 
 	/* User Tasks */
 	Task::create(Shell::launch<stdio.max_size()>, &stdio.buf, 0, "shell");
-	Task::create(App::led_test, nullptr, 1, "led/test");
+	Task::create(App::led, nullptr, 1, "led/init");
+	Task::create(App::m2m<hub.max_size()>, &hub, 2, "m2m/init");
 
 	/* Test examples */
 	Task::create(Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
-	Task::create(Test::AsyncTest, 100, 2, "async/test");
+	Task::create(Test::AsyncTest, 500, 2, "async/test");
 	// Task::create(Test::MutexTest, 3, 2, "mutex/test");
 
 	// Start scheduling, never return

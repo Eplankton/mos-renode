@@ -64,10 +64,10 @@ namespace MOS::User::Test
 			static MsgQue_t channel;                    // Create a static MsgQueue
 			constexpr Task::Prior_t base_pri = NUM + 1; // Set base priority
 
-			Task::create(consumer, &channel, base_pri, "recv"); // Create a Consumer
+			Task::create(consumer, &channel, base_pri, "msg_q/recv"); // Create a Consumer
 
 			for (auto p = base_pri; p <= base_pri * 2; p += 1) {
-				Task::create(producer, &channel, p, "send"); // Create multiple Producers
+				Task::create(producer, &channel, p, "msg_q/send"); // Create multiple Producers
 			}
 		};
 

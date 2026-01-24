@@ -1,5 +1,5 @@
 :name: Multiple Machines emulation
-:description: None
+:description: M1 and M2 connected via UART Hub
 
 # Replace to your path
 $add_on_repl?=$CWD/add_on.repl
@@ -8,10 +8,15 @@ $bin_path?=$CWD/../build/mos-renode.elf
 $name1?="M1"
 $name2?="M2"
 
-# Create Machine 1
+# Create a symmetrical connection from UARTHub
+emulation CreateUARTHub "uart_hub"
+
+# ---------------- Create Machine 1 ----------------
 mach create $name1
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
 machine LoadPlatformDescription $add_on_repl
+gpioPortA.UserButton Press # Give id=1
+
 sysbus.nvic Frequency 160000000
 macro reset
 """
@@ -19,10 +24,15 @@ macro reset
 """
 runMacro $reset
 logLevel -1 gpioPortA.myLED
+
+# Host Communication (for Shell)
 emulation CreateServerSocketTerminal 3333 "uart-con1" false
 connector Connect sysbus.usart2 uart-con1
 
-# Create Machine 2
+# Inter-Communication (for M2M)
+connector Connect sysbus.usart3 uart_hub
+
+# ---------------- Create Machine 2 ----------------
 mach create $name2
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
 machine LoadPlatformDescription $add_on_repl
@@ -33,5 +43,10 @@ macro reset
 """
 runMacro $reset
 logLevel -1 gpioPortA.myLED
+
+# Host Communication (for Shell)
 emulation CreateServerSocketTerminal 3334 "uart-con2" false
 connector Connect sysbus.usart2 uart-con2
+
+# Inter-Communication (for M2M)
+connector Connect sysbus.usart3 uart_hub
