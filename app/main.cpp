@@ -257,12 +257,12 @@ namespace MOS::User::App
 			return LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0) ? 1 : 2;
 		};
 
-		static char msg[]    = "Hello! I'm Mx";
+		static char msg[]    = "Hej! I'm Mx";
 		msg[sizeof(msg) - 2] = get_m_id() + 48;
 
 		static auto m2m_tx = [](SyncUartHub_t<N>& hub) {
 			while (true) {
-				LOG("%s -> %s", Task::current()->get_name(), msg);
+				LOG("%s -> \"%s\"", Task::current()->get_name(), msg);
 				hub.send_line(msg); // Send message byte by byte
 				Task::delay(250_ms);
 			}
@@ -270,7 +270,7 @@ namespace MOS::User::App
 
 		static auto m2m_rx = [](SyncUartHub_t<N>& hub) {
 			while (true) { // Block until line received
-				LOG("%s <- %s", Task::current()->get_name(), hub.buf.recv().as_str());
+				LOG("%s -> \"%s\"", Task::current()->get_name(), hub.buf.recv().as_str());
 			}
 		};
 
@@ -295,7 +295,7 @@ int main()
 
 	/* Test examples */
 	Task::create(Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
-	Task::create(Test::AsyncTest, 500, 2, "async/test");
+	Task::create(Test::AsyncTest, 200, 2, "async/test");
 	// Task::create(Test::MutexTest, 3, 2, "mutex/test");
 
 	// Launch Scheduler, never return
