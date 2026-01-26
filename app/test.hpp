@@ -78,13 +78,13 @@ namespace MOS::User::Test
 	{
 		using Async::Future_t;
 
-		static auto sum_worker = [](const size_t n) -> Future_t<int> {
+		static auto sum_worker = [](const size_t n) -> Future_t<f32> {
 			uint32_t result = 0;
 			uint32_t rng    = n * 63641362238ULL + 1; // RNG Seed
 
 			for (uint32_t i = 0; i < n; i++) {
 				result += i;
-				rng = rng * 63641365ULL + Global::os_ticks; // RNG Generator
+				rng = rng * 63641365ULL + os_ticks; // RNG Generator
 				if ((rng % n) == 0) {
 					co_await Async::delay(1000_ms + 10 * (rng % 13));
 				}
@@ -95,8 +95,8 @@ namespace MOS::User::Test
 		static size_t cnt = scale;
 
 		auto sum = [](const size_t n) -> Future_t<> {
-			int val = co_await sum_worker(n);
-			LOG("sum(%d) => %d", n, val);
+			auto val = co_await sum_worker(n) * 1.234f;
+			LOG("sum(%d) => %.3f", n, val);
 			if (--cnt <= 0) {
 				LOG("All Async Jobs Are Done!");
 			}

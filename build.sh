@@ -1,45 +1,68 @@
 #!/bin/bash
 
-# Stop immediately on error
-set -e
+# ==============================================================================
+# Build Script for mos-renode
+# ==============================================================================
 
-# Define paths
+# Stop on error, unset variables, and pipe failures
+set -euo pipefail
+
+# Project Configurations
 BUILD_DIR="build"
 ARTIFACT_NAME="mos-renode"
+THREADS=$(nproc 2>/dev/null || echo 4)
 
-# Color definitions
+# UI Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# If argument is "clean", remove build directory and exit
-if [ "$1" == "clean" ]; then
-    echo -e "${BLUE}[INFO] Cleaning build directory...${NC}"
+# Helper functions for logging
+log_info()  { echo -e "${BLUE}[INFO]  $1${NC}"; }
+log_success() { echo -e "${GREEN}[DONE]  $1${NC}"; }
+log_warn() { echo -e "${YELLOW}[WARN]  $1${NC}"; }
+log_error() { echo -e "${RED}[ERROR] $1${NC}"; }
+
+# Clean logic
+if [ "${1:-}" == "clean" ]; then
+    log_info "Cleaning build directory..."
     rm -rf "$BUILD_DIR"
-    echo -e "${GREEN}[DONE] Cleaned.${NC}"
+    log_success "Cleaned."
     exit 0
 fi
 
-# 1. Create build directory
-if [ ! -d "$BUILD_DIR" ]; then
-    echo -e "${BLUE}[INFO] Creating build directory...${NC}"
-    mkdir -p "$BUILD_DIR"
+# Environment Check
+if ! command -v cmake &> /dev/null; then
+    log_error "cmake could not be found. Please install it."
+    exit 1
 fi
 
-cd "$BUILD_DIR"
+# Create build directory
+mkdir -p "$BUILD_DIR"
 
-# 2. CMake configuration
-# -DCMAKE_EXPORT_COMPILE_COMMANDS=ON generates compile_commands.json in build directory
-echo -e "${BLUE}[INFO] Configuring CMake...${NC}"
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+# CMake configuration
+# Use -S and -B to avoid 'cd' (Cleaner path management)
+log_info "Configuring CMake..."
+cmake -S . -B "$BUILD_DIR" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-# 3. Start compilation
-echo -e "${BLUE}[INFO] Building project...${NC}"
-cmake --build . -- -j$(nproc)
+# Compilation
+log_info "Building project with $THREADS threads..."
+cmake --build "$BUILD_DIR" --parallel "$THREADS"
 
-# 4. Display build results
-echo -e "========================================="
-echo -e "${GREEN}[DONE] Build Success!${NC}"
-echo -e "========================================="
-ls -lh ${ARTIFACT_NAME}.elf ${ARTIFACT_NAME}.bin ${ARTIFACT_NAME}.hex 2>/dev/null || true
-echo -e "========================================="
+# Display results
+echo -e "\n=========================================${NC}"
+log_success "Build Successful!"
+echo -e "=========================================${NC}"
+
+# Check for artifacts and display size
+FILES=("${BUILD_DIR}/${ARTIFACT_NAME}.elf" "${BUILD_DIR}/${ARTIFACT_NAME}.bin" "${BUILD_DIR}/${ARTIFACT_NAME}.hex")
+for FILE in "${FILES[@]}"; do
+    if [ -f "$FILE" ]; then
+        ls -lh "$FILE" | awk '{print $9 " \t(" $5 ")"}'
+    else
+        log_warn "Missing: $(basename "$FILE")"
+    fi
+done
+echo -e "=========================================${NC}"

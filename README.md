@@ -26,16 +26,16 @@
 ## Start 📦
 
 - ### Use CMake
-  - Install the **CMake** and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
-  - Run `./build.sh` to call **CMake Tools** and build the project.
+  - Install the **CMake** and the `arm-none-eabi-gcc` toolchain
+  - Run `./build.sh` to call **CMake Tools** and build the project
 
 - ### Use EIDE
-  - Run `git submodule init && git submodule update` to pull the submodule `core`.
-  - Install **[EIDE](https://em-ide.com)** extension and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`.
+  - Run `git submodule init && git submodule update` to pull the submodule `core`
+  - Install **[EIDE](https://em-ide.com)** extension and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`
 
 - ### Renode Emulation
-  - Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** platform, and add `renode` to the `/usr/bin` path or environment variables.
-  - Run `Start Debugging` or press `F5` to start, open a `TCP` connection on `localhost:3333`, and observe the serial output.
+  - Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** platform, and add `renode` to the `/usr/bin` path or environment variables
+  - Run `Start Debugging` or press `F5` to start, open a `TCP` connection on `localhost:3333`, and observe the serial output
 
 
 ## Manual 📚
@@ -195,14 +195,14 @@ int main()
     Test::AsyncTest();
     ...
     
-    // Start scheduling, never return
+	// Launch Scheduler, never return
     Scheduler::launch();
 }
 ```
 
 ## Boot Up ⚡
 ```plain
- A_A       _   Version @ x.x.x(...)
+ A_A       _   [name]  @ x.x.x(Version)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
  (_(_/--(_/    2023-2026 Copyright by Eplankton
@@ -221,6 +221,7 @@ o'' )_____//   Build   @ TIME, DATE
 
 > ✅ Done：
 >
+> - Add Hardware `FPU` support
 > - **CMake Tools** are now available for compiling the project
 > - Add external library [**ETL**](https://www.etlcpp.com/), a C++ template library for embedded applications
 > - Add `Renode` emulation platform, add stable support for `Cortex-M` series

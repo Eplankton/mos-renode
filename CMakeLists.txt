@@ -3,16 +3,16 @@ cmake_minimum_required(VERSION 3.20)
 # ==============================================================================
 # Toolchain & Project Setup
 # ==============================================================================
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR arm)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-# Standard Cross-compiler tools
-set(CMAKE_C_COMPILER arm-none-eabi-gcc)
-set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
-set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
-set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
-set(CMAKE_SIZE arm-none-eabi-size)
+set(TC_PREFIX arm-none-eabi-)
+set(CMAKE_C_COMPILER ${TC_PREFIX}gcc)
+set(CMAKE_CXX_COMPILER ${TC_PREFIX}g++)
+set(CMAKE_ASM_COMPILER ${TC_PREFIX}gcc)
+set(CMAKE_OBJCOPY ${TC_PREFIX}objcopy)
+set(CMAKE_SIZE ${TC_PREFIX}size)
 
 project(mos-renode C CXX ASM)
 
@@ -29,18 +29,18 @@ if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     # Check if 'core' is populated OR if 'etl' inside core is populated
     if(NOT EXISTS "${CORE_DIR}/kernel/printf.c" OR NOT EXISTS "${ETL_DIR}/CMakeLists.txt")
         message(STATUS "Submodules missing. Initializing recursively...")
-        
+
         # Standard initialization: Pull the specific commit recorded in the superproject
         execute_process(
             COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             RESULT_VARIABLE git_res
         )
-        
+
         # Update to Master: If initialization succeeded, force 'core' to latest master
         if(git_res EQUAL 0)
             message(STATUS "Switching 'core' submodule to latest master branch...")
-            
+
             # Switch 'core' from detached HEAD to master branch
             execute_process(
                 COMMAND ${GIT_EXECUTABLE} checkout master
@@ -72,22 +72,21 @@ if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     endif()
 endif()
 
+# Use EXCLUDE_FROM_ALL to prevent building ETL tests or examples
+add_subdirectory(${ETL_DIR} EXCLUDE_FROM_ALL)
+
 # ==============================================================================
 # Target Configuration
 # ==============================================================================
 set(TARGET_NAME mos-renode)
-set(MCU_FLAGS -mcpu=cortex-m4 -mfloat-abi=soft -mthumb)
 
-# ETL is added first to ensure etl::etl target is available
-add_subdirectory(${ETL_DIR})
-
-# Source grouping
-file(GLOB_RECURSE DRIVER_SOURCES 
-    "vendor/Core/Src/*.c" 
+# CONFIGURE_DEPENDS: Automatically re-scan for new files during build, no manual refresh needed
+file(GLOB_RECURSE DRIVER_SOURCES CONFIGURE_DEPENDS
+    "vendor/Core/Src/*.c"
     "vendor/Drivers/STM32F4xx_HAL_Driver/Src/*.c"
 )
 
-add_executable(${TARGET_NAME}.elf 
+add_executable(${TARGET_NAME}.elf
     core/kernel/printf.c
     core/kernel/syscall.c
     app/main.cpp
@@ -95,23 +94,12 @@ add_executable(${TARGET_NAME}.elf
     ${DRIVER_SOURCES}
 )
 
-# Compile options & Standards
+# ==============================================================================
+# Build Options
+# ==============================================================================
 target_compile_features(${TARGET_NAME}.elf PRIVATE c_std_17 cxx_std_23)
-target_compile_options(${TARGET_NAME}.elf PRIVATE
-    ${MCU_FLAGS}
-    -Os -Wall -g -ffunction-sections -fdata-sections
-    -funsigned-char -fno-exceptions
-    --specs=nosys.specs --specs=nano.specs
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti -flto -fcoroutines>
-    $<$<COMPILE_LANGUAGE:C>:-Wno-deprecated-volatile>
-)
+target_compile_definitions(${TARGET_NAME}.elf PRIVATE STM32F407xx USE_FULL_LL_DRIVER USE_HAL_DRIVER)
 
-# Definitions
-target_compile_definitions(${TARGET_NAME}.elf PRIVATE 
-    STM32F407xx USE_FULL_LL_DRIVER USE_HAL_DRIVER
-)
-
-# Include paths (Modern approach using target_include_directories)
 target_include_directories(${TARGET_NAME}.elf PRIVATE
     vendor vendor/Core/Inc vendor/Core/Src
     vendor/Drivers/STM32F4xx_HAL_Driver/Inc
@@ -121,19 +109,46 @@ target_include_directories(${TARGET_NAME}.elf PRIVATE
     app
 )
 
-# Linking
+# ==============================================================================
+# Hardware Definitions & MCU Flags
+# ==============================================================================
+set(MCU_FLAGS
+    -mcpu=cortex-m4
+    -mthumb
+    -mfpu=fpv4-sp-d16
+    -mfloat-abi=hard
+) # FPU Enabled
+
+# set(MCU_FLAGS
+# -mcpu=cortex-m4
+# -mthumb
+# ) # FPU Disabled
+
+# Consolidate general compilation flags
+target_compile_options(${TARGET_NAME}.elf PRIVATE
+    ${MCU_FLAGS}
+    -Os -Wall -g
+    -ffunction-sections -fdata-sections
+    -funsigned-char -fno-exceptions
+    --specs=nano.specs
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti -fcoroutines -fno-use-cxa-atexit>
+    $<$<COMPILE_LANGUAGE:C>:-Wno-deprecated-volatile>
+)
+
+# Linker script configuration
 set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/vendor/STM32F407VGTx_FLASH.ld")
+
 target_link_libraries(${TARGET_NAME}.elf PRIVATE etl::etl)
 target_link_options(${TARGET_NAME}.elf PRIVATE
     ${MCU_FLAGS}
     -T${LINKER_SCRIPT}
     -Wl,--gc-sections --specs=nosys.specs --specs=nano.specs
-    -Wl,--print-memory-usage -Wl,-Map=${CMAKE_BINARY_DIR}/${TARGET_NAME}.map
-    -lm -lsupc++
+    -Wl,--print-memory-usage
+    -Wl,-Map=${CMAKE_BINARY_DIR}/${TARGET_NAME}.map
 )
 
 # ==============================================================================
-# Post-Build Artifacts
+# Post-Build Steps
 # ==============================================================================
 add_custom_command(TARGET ${TARGET_NAME}.elf POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET_NAME}.elf> ${TARGET_NAME}.hex

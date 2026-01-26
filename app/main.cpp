@@ -220,7 +220,7 @@ namespace MOS::BSP
 	extern "C" void USART3_IRQHandler() // For machines' link
 	{
 		User::Global::hub.read_line(
-		    [] { LOG("Oops! UART Shit!"); }
+		    [] { LOG("Oops! Buffer Overflow!"); }
 		);
 	}
 
@@ -298,6 +298,6 @@ int main()
 	Task::create(Test::AsyncTest, 500, 2, "async/test");
 	// Task::create(Test::MutexTest, 3, 2, "mutex/test");
 
-	// Start scheduling, never return
+	// Launch Scheduler, never return
 	Scheduler::launch();
 }

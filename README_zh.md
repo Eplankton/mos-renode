@@ -24,7 +24,7 @@
 ## 启动 📦
 
 - ### 使用 CMake
-  - 安装 **CMake** 和 `arm-none-eabi-gcc` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
+  - 安装 **CMake** 和 `arm-none-eabi-gcc` 工具链
   - 运行 `./build.sh`, 调用 **CMake Tools** 编译项目
 
 - ### 使用 EIDE
@@ -193,14 +193,14 @@ int main()
     Test::AsyncTest();
     ...
     
-    // Start scheduling, never return
+	// Launch Scheduler, never return
     Scheduler::launch();
 }
 ```
 
 ## 启动 ⚡
 ```plain
- A_A       _   Version @ x.x.x(...)
+ A_A       _   [name]  @ x.x.x(Version)
 o'' )_____//   Build   @ TIME, DATE
  `_/  MOS  )   Chip    @ MCU, ARCH
  (_(_/--(_/    2023-2026 Copyright by Eplankton
@@ -218,8 +218,9 @@ o'' )_____//   Build   @ TIME, DATE
 📦 `v0.4`
 
 > ✅ 完成：
+> - 添加 `FPU` 硬件浮点支持
 > - 可使用 **CMake Tools** 编译项目
-> - 引入外部库 [**ETL**](https://www.etlcpp.com/)，嵌入式 C++ 模板库
+> - 引入嵌入式 C++ 模板库 [**ETL**](https://www.etlcpp.com/)
 > - 开发平台迁移，使用 `Renode` 仿真平台, 稳定支持 `Cortex-M` 系列
 > - **[实验性]** 添加调度器锁 `Scheduler::suspend()`
 > - **[实验性]** 添加异步无栈(Stackless)协程 `Async::{Executor, Future_t, co_await...}`
@@ -247,7 +248,6 @@ o'' )_____//   Build   @ TIME, DATE
 > 📌 计划： 
 >
 > - 进程间通信：管道/通道
-> - `FPU` 硬件浮点支持
 > - 性能基准测试
 > - `Result<T, E>, Option<T>`，错误处理
 > - `DMA_t` 驱动
