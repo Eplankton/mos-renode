@@ -2,6 +2,7 @@
 #define _MOS_USER_TEST_
 
 #include "../core/kernel.hpp"
+#include <cstdint>
 
 namespace MOS::User::Test
 {
@@ -74,36 +75,34 @@ namespace MOS::User::Test
 		Task::create(launch, nullptr, Macro::PRI_MAX, "msg_q/test");
 	}
 
-	void AsyncTest(const size_t scale)
+	template <size_t NUM>
+	void AsyncTest()
 	{
 		using Async::Future_t;
+		static size_t cnt = NUM;
 
-		static auto sum_worker = [](const size_t n) -> Future_t<f32> {
-			uint32_t result = 0;
-			uint32_t rng    = n * 63641362238ULL + 1; // RNG Seed
+		auto sum = [](const size_t n) -> Future_t<> {
+			f32 result   = 0;
+			uint32_t rng = n * 63641362238ULL + 1; // RNG Seed
 
-			for (uint32_t i = 0; i < n; i++) {
+			// Simualte a large calculation
+			for (size_t i = 0; i < n; i++) {
 				result += i;
 				rng = rng * 63641365ULL + os_ticks; // RNG Generator
 				if ((rng % n) == 0) {
 					co_await Async::delay(1000_ms + 10 * (rng % 13));
 				}
 			}
-			co_return result;
-		};
 
-		static size_t cnt = scale;
+			LOG("sum(%d) => %.3f", n, result * 1.234f);
 
-		auto sum = [](const size_t n) -> Future_t<> {
-			auto val = co_await sum_worker(n) * 1.234f;
-			LOG("sum(%d) => %.3f", n, val);
 			if (--cnt <= 0) {
-				LOG("All Async Jobs Are Done!");
+				LOG("All Async Sum Jobs Are Done!");
 			}
 		};
 
 		// Launch all coroutines
-		for (size_t k = scale; k > 0; k -= 1) {
+		for (size_t k = NUM; k > 0; k -= 1) {
 			auto fut = sum(k); // lazy calculation
 		}
 	}

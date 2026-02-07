@@ -1,6 +1,6 @@
 <h3 align="center">
-<img src="pic/mos-line.png" width="25%">
-    
+<img src="pic/mos_ascii.svg" width="30%">
+
 <a href="https://github.com/Eplankton/mos-stm32/stargazers"><img src="https://img.shields.io/github/stars/Eplankton/mos-stm32?colorA=363a4f&colorB=b7bdf8&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-stm32/network/members"><img src="https://img.shields.io/github/forks/Eplankton/mos-stm32?colorA=363a4f&colorB=c6a0f6&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-stm32/contributors"><img src="https://img.shields.io/github/contributors/Eplankton/mos-stm32?colorA=363a4f&colorB=a6da95&style=for-the-badge"></a>
@@ -9,6 +9,9 @@
 **[中文](https://gitee.com/Eplankton/mos-renode) | [English](https://github.com/Eplankton/mos-renode)**
 
 </h3>
+
+> [!NOTE]
+> 本项目正在积极发展和改进，随着设计的不断完善，一些 API 和接口可能会发生变化。
 
 ## 简介 🚀
 
@@ -24,12 +27,12 @@
 ## 启动 📦
 
 - ### 使用 CMake
-  - 安装 **CMake** 和 `arm-none-eabi-gcc` 工具链
+  - 安装 **CMake** 和 `Arm GNU Toolchain` 工具链
   - 运行 `./build.sh`, 调用 **CMake Tools** 编译项目
 
 - ### 使用 EIDE
   - 运行 `git submodule init && git submodule update` 拉取子模块 `core`
-  - 安装 **[EIDE](https://em-ide.com)** 插件和 `arm-none-eabi-gcc` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
+  - 安装 **[EIDE](https://em-ide.com)** 插件和 `Arm GNU Toolchain` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
 
 - ### Renode 仿真
   - 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径或环境变量
@@ -213,7 +216,7 @@ o'' )_____//   Build   @ TIME, DATE
 ---------------------------------------
 ```
 
-## 开发进展 📜
+## 里程碑 📜
 
 📦 `v0.4`
 

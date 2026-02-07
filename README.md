@@ -1,5 +1,5 @@
 <h3 align="center">
-<img src="pic/mos-paint.png" width="25%">
+<img src="pic/mos_ascii.svg" width="25%">
 
 <a href="https://github.com/Eplankton/mos-stm32/stargazers"><img src="https://img.shields.io/github/stars/Eplankton/mos-stm32?colorA=363a4f&colorB=b7bdf8&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-stm32/network/members"><img src="https://img.shields.io/github/forks/Eplankton/mos-stm32?colorA=363a4f&colorB=c6a0f6&style=for-the-badge"></a>
@@ -10,11 +10,14 @@
 
 </h3>
 
+> [!NOTE]  
+> This project is currently actively evolving and improving, some APIs and interfaces may change as the design continues to mature.
+
 ## About 🚀
 
 - **MOS** is a Real-Time Operating System (RTOS) project built in C++, which consists of a preemptive kernel and a command-line shell with other applications (e.g., **GuiLite** and **FatFS**).
 
-- [**Renode**](https://renode.io/) was created by [**Antmicro**](https://antmicro.com/) as a virtual development tool for multi-node embedded networks (both wired and wireless) and is intended to enable a scalable workflow for creating effective, tested and secure IoT systems.
+- [**Renode**](https://renode.io/) is a virtual development tool created by [**Antmicro**](https://antmicro.com/) for multi-node embedded networks (both wired and wireless) and is intended to enable a scalable workflow for creating effective, tested and secure IoT systems.
 
 
 
@@ -26,12 +29,12 @@
 ## Start 📦
 
 - ### Use CMake
-  - Install the **CMake** and the `arm-none-eabi-gcc` toolchain
+  - Install the **CMake** and the `Arm GNU Toolchain`
   - Run `./build.sh` to call **CMake Tools** and build the project
 
 - ### Use EIDE
   - Run `git submodule init && git submodule update` to pull the submodule `core`
-  - Install **[EIDE](https://em-ide.com)** extension and the `arm-none-eabi-gcc` toolchain, then open `*.code-workspace` using `VS Code`
+  - Install **[EIDE](https://em-ide.com)** extension and the `Arm GNU Toolchain`, then open `*.code-workspace` using `VS Code`
 
 - ### Renode Emulation
   - Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** platform, and add `renode` to the `/usr/bin` path or environment variables
@@ -40,7 +43,7 @@
 
 ## Manual 📚
 
--  [Manual(English) from **DeepWiki**](https://deepwiki.com/Eplankton/mos-renode) | [**用户手册(中文)**](manual_zh.pdf)
+- **[用户手册(中文)](manual_zh.pdf) | [Manual(English) from **DeepWiki**](https://deepwiki.com/Eplankton/mos-renode)**
 
 ## Architecture 🔍
 <img src="pic/mos_arch.svg">
@@ -215,7 +218,7 @@ o'' )_____//   Build   @ TIME, DATE
 ---------------------------------------
 ```
 
-## RoadMap 🧾
+## Milestone 🧾
 
 📦 `v0.4`
 

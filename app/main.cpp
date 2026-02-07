@@ -24,34 +24,47 @@ namespace MOS::User::Global
 		MOS_INLINE SyncUartHub_t(Port_t port): tx(port), rx(port) {}
 		MOS_INLINE SyncUartHub_t(Port_t _tx, Port_t _rx): rx(_rx), tx(_tx) {}
 
-		inline static constexpr auto max_size() { return N; }
+		[[nodiscard]] static constexpr size_t max_size() { return N; }
 
 		void read_line(auto&& oops)
 		{
 			// read data register not exmpty
 			if (LL_USART_IsActiveFlag_RXNE(rx)) {
+				const char data = LL_USART_ReceiveData8(rx);
+				if (data == '\r') return;
 				Utils::IrqGuard_t guard;
-				char8_t data = LL_USART_ReceiveData8(rx);
+
 				if (!buf.full()) {
-					if (data == '\n') // read a line
+					if (data == '\n') {
 						buf.signal_from_isr();
-					else
+					}
+					else {
 						buf.push(data);
+					}
 				}
 				else {
-					buf.clear();
-					oops();
+					if (data == '\n') {
+						buf.signal_from_isr();
+					}
+					else {
+						oops();
+					}
 				}
 			}
 		}
 
-		void send_line(const char msg[])
+		void send_line(const char* msg)
 		{
-			for (const char* p = msg; *p; ++p) {
+			static auto send_byte = [&](uint8_t byte) {
 				while (!LL_USART_IsActiveFlag_TXE(tx));
-				LL_USART_TransmitData8(tx, *p);
+				LL_USART_TransmitData8(tx, byte);
+			};
+
+			if (!msg) return;
+			while (*msg) {
+				send_byte(*msg++);
 			}
-			LL_USART_TransmitData8(tx, '\n');
+			send_byte('\n');
 		}
 	};
 
@@ -251,31 +264,22 @@ namespace MOS::User::App
 		}
 	};
 
-	template <size_t N>
+	template <size_t N> // Machine-to-Machine Link Example
 	auto m2m = [](SyncUartHub_t<N>& hub) {
-		static auto get_m_id = [] {
-			return LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0) ? 1 : 2;
-		};
+		char msg[]           = "Hej! I'm Mx";
+		msg[sizeof(msg) - 2] = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0) ? '1' : '2';
 
-		static char msg[]    = "Hej! I'm Mx";
-		msg[sizeof(msg) - 2] = get_m_id() + 48;
-
-		static auto m2m_tx = [](SyncUartHub_t<N>& hub) {
+		[&] -> Async::Future_t<> {
 			while (true) {
-				LOG("%s -> \"%s\"", Task::current()->get_name(), msg);
-				hub.send_line(msg); // Send message byte by byte
-				Task::delay(250_ms);
+				LOG("tx -> \"%s\"", msg);
+				hub.send_line(msg);
+				co_await Async::delay(500_ms);
 			}
-		};
+		}(); // Launch Async-TX
 
-		static auto m2m_rx = [](SyncUartHub_t<N>& hub) {
-			while (true) { // Block until line received
-				LOG("%s -> \"%s\"", Task::current()->get_name(), hub.buf.recv().as_str());
-			}
-		};
-
-		Task::create(m2m_tx, &hub, Task::current()->get_pri(), "m2m/tx");
-		Task::create(m2m_rx, &hub, Task::current()->get_pri(), "m2m/rx");
+		while (true) { // Launch Sync-RX
+			LOG("rx -> \"%s\"", hub.buf.recv().as_str());
+		}
 	};
 }
 
@@ -290,12 +294,12 @@ int main()
 
 	/* User Tasks */
 	Task::create(Shell::launch<stdio.max_size()>, &stdio.buf, 0, "shell");
-	Task::create(App::led, nullptr, 1, "led/init");
-	Task::create(App::m2m<hub.max_size()>, &hub, 2, "m2m/init");
+	Task::create(App::led, nullptr, 1, "led");
+	Task::create(App::m2m<hub.max_size()>, &hub, 2, "m2m");
 
 	/* Test examples */
 	Task::create(Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
-	Task::create(Test::AsyncTest, 200, 2, "async/test");
+	Task::create(Test::AsyncTest<300>, nullptr, 2, "async/test");
 	// Task::create(Test::MutexTest, 3, 2, "mutex/test");
 
 	// Launch Scheduler, never return
