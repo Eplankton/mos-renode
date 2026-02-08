@@ -1,5 +1,8 @@
+<h1 align="center">
+<img src="pic/mos_ascii.png" width="30%">
+</h1>
+
 <h3 align="center">
-<img src="pic/mos_ascii.svg" width="25%">
 
 <a href="https://github.com/Eplankton/mos-stm32/stargazers"><img src="https://img.shields.io/github/stars/Eplankton/mos-stm32?colorA=363a4f&colorB=b7bdf8&style=for-the-badge"></a>
 <a href="https://github.com/Eplankton/mos-stm32/network/members"><img src="https://img.shields.io/github/forks/Eplankton/mos-stm32?colorA=363a4f&colorB=c6a0f6&style=for-the-badge"></a>
@@ -11,7 +14,7 @@
 </h3>
 
 > [!NOTE]  
-> This project is currently actively evolving and improving, some APIs and interfaces may change as the design continues to mature.
+> This project is currently under actively developing and improving, some APIs and interfaces may change as the design continues to mature.
 
 ## About 🚀
 
