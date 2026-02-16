@@ -101,11 +101,18 @@ target_compile_features(${TARGET_NAME}.elf PRIVATE c_std_17 cxx_std_23)
 target_compile_definitions(${TARGET_NAME}.elf PRIVATE STM32F407xx USE_FULL_LL_DRIVER USE_HAL_DRIVER)
 
 target_include_directories(${TARGET_NAME}.elf PRIVATE
-    vendor vendor/Core/Inc vendor/Core/Src
+    vendor
+    vendor/Core/Inc
+    vendor/Core/Src
     vendor/Drivers/STM32F4xx_HAL_Driver/Inc
     vendor/Drivers/CMSIS/Include
     vendor/Drivers/CMSIS/Device/ST/STM32F4xx/Include
-    core core/kernel core/kernel/data_type core/arch
+
+    core
+    core/kernel
+    core/kernel/data_type
+    core/arch
+
     app
 )
 
@@ -131,6 +138,7 @@ target_compile_options(${TARGET_NAME}.elf PRIVATE
     -ffunction-sections -fdata-sections
     -funsigned-char -fno-exceptions
     --specs=nano.specs
+    -flto
     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti -fcoroutines -fno-use-cxa-atexit>
     $<$<COMPILE_LANGUAGE:C>:-Wno-deprecated-volatile>
 )
@@ -144,6 +152,7 @@ target_link_options(${TARGET_NAME}.elf PRIVATE
     -T${LINKER_SCRIPT}
     -Wl,--gc-sections --specs=nosys.specs --specs=nano.specs
     -Wl,--print-memory-usage
+    -flto
     -Wl,-Map=${CMAKE_BINARY_DIR}/${TARGET_NAME}.map
 )
 

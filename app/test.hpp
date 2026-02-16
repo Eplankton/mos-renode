@@ -11,32 +11,118 @@ namespace MOS::User::Test
 
 	void MutexTest(size_t scale)
 	{
-		static Sync::Mutex_t mutex;
+		// ==========================================
+		// 1. PIP Test (L/M/H Inversion Scenario)
+		// ==========================================
+		static auto pip_test = [] {
+			static Sync::Mutex_t mutex;
 
-		static auto mtx_test = [](uint32_t ticks) {
-			auto cur = Task::current();
-			while (true) {
-				mutex.hold([&] {
-					for (auto i: Range(0, 5)) {
-						kprintf(
-						    "Mutex(%d => %d), [%d] locked\n",
-						    cur->sub_pri, cur->pri, i + 1
-						);
-						Task::delay(100_ms);
+			static const auto PRI_H = 1;
+			static const auto PRI_M = 2;
+			static const auto PRI_L = 3;
+
+			kprintf("\n=== [Test 1] PIP Inversion Test (L/M/H) ===\n");
+			kprintf("Expect: L(P%d) locks -> H(P%d) runs & boosts L -> M(P%d) cannot preempt L\n", PRI_L, PRI_H, PRI_M);
+
+			// --- Low Priority Task ---
+			auto task_l = [] {
+				mutex.hold([] {
+					kprintf("[L] Locked. Pri=%d. Busy Waiting 500ms for H/M...\n", Task::current()->get_pri());
+
+					// Busy waiting: hog CPU to test if H can preempt
+					auto start = Kernel::Global::os_ticks;
+					while (Kernel::Global::os_ticks < start + 500_ms) {
+						MOS_NOP();
 					}
+
+					kprintf("[L] Resumed. Checking PIP status...\n");
+					auto cur = Task::current();
+
+					// Check Point: H should have run and boosted priority
+					if (cur->get_pri() <= PRI_H) {
+						kprintf("[L] PASS: Priority Boosted to %d (Matched H)\n", cur->get_pri());
+					}
+					else {
+						kprintf("[L] FAIL: Priority is %d. (H didn't run)\n", cur->get_pri());
+					}
+
+					kprintf("[L] Working (M should NOT preempt)...\n");
+					for (int i = 0; i < 3; i++) {
+						Utils::delay(100_ms);
+					}
+					kprintf("[L] Unlock\n");
 				});
-				Task::delay(ticks);
-			}
+				kprintf("[L] Finished. Pri restored to %d\n", Task::current()->get_pri());
+			};
+
+			// --- High Priority Task ---
+			auto task_h = [] {
+				Task::delay(100_ms); // Let L run first
+
+				// If this line is not printed, preemption failed
+				kprintf("[H] Started! Trying to lock (Should boost L)...\n");
+
+				mutex.hold([] {
+					kprintf("[H] Get Lock!\n");
+				});
+
+				kprintf("[H] Finished\n");
+			};
+
+			// --- Medium Priority Task ---
+			auto task_m = [] {
+				Task::delay(200_ms);
+				kprintf("[M] Started.\n"); // If this line prints before L Unlock, PIP failed
+				kprintf("[M] Done! (Should be LAST)\n");
+			};
+
+			Task::create(task_h, nullptr, PRI_H, "mtx/H");
+			Task::create(task_m, nullptr, PRI_M, "mtx/M");
+			Task::create(task_l, nullptr, PRI_L, "mtx/L");
 		};
 
-		static auto launch = [](size_t scale) {
-			for (auto i = scale; i > 0; i -= 1) {
-				Task::create(mtx_test, i * 10_ms, i, "mtx");
-				Task::delay(5_ms);
-			}
-		};
+		Task::create(pip_test, 0, Macro::PRI_MIN, "pip_root");
 
-		Task::create(launch, scale, Macro::PRI_MAX, "mutex/test");
+		// // ==========================================
+		// // 2. Stress Test
+		// // ==========================================
+		// static auto stress_test = [] {
+		// 	kprintf("\n=== [Test 2] Concurrency Stress Test ===\n");
+
+		// 	static Sync::Mutex_t stress_mtx;
+		// 	static volatile int cnt = 0;
+		// 	const int TASKS_NUM     = 4;
+		// 	const int INC_PER_TASK  = 1000;
+
+		// 	static auto worker = [](int count) {
+		// 		for (int i = 0; i < count; i++) {
+		// 			stress_mtx.hold([&] {
+		// 				volatile int temp = cnt;
+		// 				cnt               = temp + 1;
+		// 			});
+		// 			if (i % 100 == 0) Task::yield(); // Rapid Shuffle
+		// 		}
+		// 	};
+
+		// 	for (int i = 0; i < TASKS_NUM; i++) {
+		// 		Task::create(worker, INC_PER_TASK, 2, "worker");
+		// 	}
+
+		// 	// Wait until all done
+		// 	Task::delay(1000_ms);
+
+		// 	kprintf("Expect: %d\n", TASKS_NUM * INC_PER_TASK);
+		// 	kprintf("Actual: %d\n", cnt);
+
+		// 	if (cnt == TASKS_NUM * INC_PER_TASK) {
+		// 		kprintf("[PASS] Done.\n");
+		// 	}
+		// 	else {
+		// 		kprintf("[FAIL] Race Condition Detected!\n");
+		// 	}
+		// };
+
+		// Task::create(stress_test, scale, Macro::PRI_MAX, "mtx/test");
 	}
 
 	template <size_t NUM>

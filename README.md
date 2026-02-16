@@ -245,9 +245,9 @@ o'' )_____//   Build   @ TIME, DATE
 > - Mapping `Tids` to `BitMap_t`
 > - Message queue `IPC::MsgQueue_t`
 > - `Task::create` allows generic function signatures as `void fn(auto argv)` with type checker
-> - Added `ESP32-C3` as a `WiFi` component
-> - Added `Driver::Device::SD_t`, `SD` card driver, porting `FatFs` file system
-> - Added `Shell::usr_cmds` for user-registered commands
+> - Add `ESP32-C3` as a `WiFi` component
+> - Add `Driver::Device::SD_t`, `SD` card driver, porting `FatFs` file system
+> - Add `Shell::usr_cmds` for user-registered commands
 > - **[Experimental]** Atomic types `<stdatomic.h>`
 > - **[Experimental]** `Utils::IrqGuard_t`, nested interrupt critical sections
 > - **[Experimental]** Simple formal verification of `Scheduler + Mutex`
