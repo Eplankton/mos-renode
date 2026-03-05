@@ -227,6 +227,7 @@ o'' )_____//   Build   @ TIME, DATE
 
 > ✅ Done：
 >
+> - Port to `ESP32-C6(RISC-V)`
 > - Add Hardware `FPU` support
 > - **CMake Tools** are now available for compiling the project
 > - Add external library [**ETL**](https://www.etlcpp.com/), a C++ template library for embedded applications

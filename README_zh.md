@@ -224,6 +224,7 @@ o'' )_____//   Build   @ TIME, DATE
 📦 `v0.4`
 
 > ✅ 完成：
+> - 移植到 `ESP32-C6(RISC-V)`
 > - 添加 `FPU` 硬件浮点支持
 > - 可使用 **CMake Tools** 编译项目
 > - 引入嵌入式 C++ 模板库 [**ETL**](https://www.etlcpp.com/)
