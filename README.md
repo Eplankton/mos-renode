@@ -228,7 +228,7 @@ o'' )_____//   Build   @ TIME, DATE
 
 📦 `v0.5`
 
-> ✅ 完成：
+> ✅ Done：
 > - **[Experimental]** Port to `ESP32-C6(RISC-V)`
 > - **[Experimental]** Rewrite it in Rust
 
