@@ -1,0 +1,5 @@
+{
+    "clangd.arguments": [
+        "--query-driver=/usr/bin/arm-none-eabi-g++"
+    ]
+}
