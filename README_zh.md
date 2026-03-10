@@ -18,7 +18,7 @@
 
 ## 简介 🚀
 
-- **MOS** 是一个用 C++ 编写的实时操作系统 (Real-Time Operating System, RTOS) 项目，包含一个抢占式内核和简易命令行, 并移植了一些应用层组件 (例如：**GuiLite** 和 **FatFS** 等)。
+- **MOS** 是一个用 C++/Rust 编写的实时操作系统 (Real-Time Operating System, RTOS) 项目，包含一个抢占式内核和简易命令行, 并移植了一些应用层组件 (例如：**GuiLite** 和 **FatFS** 等)。
 
 - [**Renode**](https://renode.io/) 由 [**Antmicro**](https://antmicro.com/) 创建，是一款用于多节点嵌入式网络（有线和无线）的虚拟化平台，旨在实现可扩展的工作流程，开发有效、经过测试且安全的物联网系统。
 
@@ -26,6 +26,8 @@
 - `mos-core` - 内核与简易命令行, **[链接](https://gitee.com/Eplankton/mos-core)**
 - `mos-stm32` - 在 STM32 上运行, **[链接](https://gitee.com/Eplankton/mos-stm32)**
 - `mos-renode` - 使用 Renode 仿真运行, **[链接](https://gitee.com/Eplankton/mos-renode)**
+
+- `mos-rust` - Vibe Coding 出来的缝合怪, **[链接](https://gitee.com/Eplankton/mos-rust)**.
 
 ## 启动 📦
 
@@ -221,10 +223,15 @@ o'' )_____//   Build   @ TIME, DATE
 
 ## 里程碑 📜
 
+📦 `v0.5`
+
+> ✅ 完成：
+> - **[实验性]** 移植到 `ESP32-C6(RISC-V)`
+> - **[实验性]** 使用 `Rust` 重写
+
 📦 `v0.4`
 
 > ✅ 完成：
-> - 移植到 `ESP32-C6(RISC-V)`
 > - 添加 `FPU` 硬件浮点支持
 > - 可使用 **CMake Tools** 编译项目
 > - 引入嵌入式 C++ 模板库 [**ETL**](https://www.etlcpp.com/)

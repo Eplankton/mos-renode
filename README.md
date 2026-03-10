@@ -18,16 +18,18 @@
 
 ## About 🚀
 
-- **MOS** is a Real-Time Operating System (RTOS) project built in C++, which consists of a preemptive kernel and a command-line shell with other applications (e.g., **GuiLite** and **FatFS**).
+- **MOS** is a Real-Time Operating System (RTOS) project built in C++/Rust, which consists of a preemptive kernel and a command-line shell with other applications (e.g., **GuiLite** and **FatFS**).
 
 - [**Renode**](https://renode.io/) is a virtual development tool created by [**Antmicro**](https://antmicro.com/) for multi-node embedded networks (both wired and wireless) and is intended to enable a scalable workflow for creating effective, tested and secure IoT systems.
 
 
 
 ## Repository 🌏
-- `mos-core` - The kernel and the shell, check **[here](https://github.com/Eplankton/mos-core)**.
+- `mos-core` - The Kernel and the Shell, check **[here](https://github.com/Eplankton/mos-core)**.
 - `mos-stm32` - Running on STM32 series, check **[here](https://github.com/Eplankton/mos-stm32)**.
-- `mos-renode` - Testing on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
+- `mos-renode` - Test on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
+- `mos-rust` - A "Vibe Coding" Chimera, check **[here](https://github.com/Eplankton/mos-rust)**.
+
 
 ## Start 📦
 
@@ -223,11 +225,18 @@ o'' )_____//   Build   @ TIME, DATE
 
 ## Milestone 🧾
 
+
+📦 `v0.5`
+
+> ✅ 完成：
+> - **[Experimental]** Port to `ESP32-C6(RISC-V)`
+> - **[Experimental]** Rewrite it in Rust
+
+
 📦 `v0.4`
 
 > ✅ Done：
 >
-> - Port to `ESP32-C6(RISC-V)`
 > - Add Hardware `FPU` support
 > - **CMake Tools** are now available for compiling the project
 > - Add external library [**ETL**](https://www.etlcpp.com/), a C++ template library for embedded applications
