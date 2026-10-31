@@ -1,0 +1,54 @@
+:name: STM32H747 Multiple Machines
+:description: M1 and M2 connected via a UART hub (USART6), Shell on USART1
+
+# Run from the repository root:
+#   renode --console emulation/stm32h7-disco/multi_mach.resc
+$add_on_repl?=$CWD/emulation/stm32h7-disco/add_on.repl
+$bin_path?=$CWD/build/stm32h7-disco/stm32h7-disco.elf
+
+$name1?="M1"
+$name2?="M2"
+
+emulation CreateUARTHub "uart_hub"
+
+# ---------------- Machine 1 ----------------
+mach create $name1
+machine LoadPlatformDescription @platforms/boards/stm32h747-disco.repl
+machine LoadPlatformDescription $add_on_repl
+gpioPortA.UserButton Press
+
+sysbus.nvic Frequency 64000000
+machine StartGdbServer 1234
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+runMacro $reset
+logLevel -1 gpioPortA.myLED
+
+emulation CreateServerSocketTerminal 3333 "uart-con1" false
+connector Connect sysbus.usart1 uart-con1
+connector Connect sysbus.usart6 uart_hub
+
+# ---------------- Machine 2 ----------------
+mach create $name2
+machine LoadPlatformDescription @platforms/boards/stm32h747-disco.repl
+machine LoadPlatformDescription $add_on_repl
+
+sysbus.nvic Frequency 64000000
+machine StartGdbServer 1235
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+runMacro $reset
+logLevel -1 gpioPortA.myLED
+
+emulation CreateServerSocketTerminal 3334 "uart-con2" false
+connector Connect sysbus.usart1 uart-con2
+connector Connect sysbus.usart6 uart_hub
+
+# Readiness marker used by emulation/run.sh
+echo "MOS_RENODE_READY"

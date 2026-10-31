@@ -27,21 +27,49 @@
 - `mos-stm32` - 在 STM32 上运行, **[链接](https://gitee.com/Eplankton/mos-stm32)**
 - `mos-renode` - 使用 Renode 仿真运行, **[链接](https://gitee.com/Eplankton/mos-renode)**
 
-- `mos-rust` - Vibe Coding 出来的缝合怪, **[链接](https://gitee.com/Eplankton/mos-rust)**.
+- `mos-rust` - Vibe Coding 出来的缝合怪, **[链接](https://gitee.com/Eplankton/mos-rust)**
 
 ## 启动 📦
 
-- ### 使用 CMake
-  - 安装 **CMake** 和 `Arm GNU Toolchain` 工具链
-  - 运行 `./build.sh`, 调用 **CMake Tools** 编译项目
+- ### 拉取依赖
+  - 运行 `git submodule update --init --recursive`
+  - STM32 依赖全部由 submodule 管理：`cmsis-core`、`cmsis-device-f4/h7`、`stm32f4xx-hal-driver`、`stm32h7xx-hal-driver`
 
-- ### 使用 EIDE
-  - 运行 `git submodule init && git submodule update` 拉取子模块 `core`
-  - 安装 **[EIDE](https://em-ide.com)** 插件和 `Arm GNU Toolchain` 工具链, 使用 `VS Code` 打开 `*.code-workspace`
+- ### 使用 CMake（推荐）
+  - 安装 **CMake** 和 `Arm GNU Toolchain` 工具链
+  - 直接运行 `./build.sh`，按菜单选择板卡
+  - 也可以直接指定：
+    ```bash
+    ./build.sh stm32f4-disco
+    ./build.sh stm32h7-disco
+    ./build.sh all
+    ./build.sh clean
+    ```
+  - 等价的 CMake 调用：
+    ```bash
+    cmake -S . -B build/stm32f4-disco -DMOS_BOARD=stm32f4-disco
+    cmake --build build/stm32f4-disco -j
+    ```
+  - 产物位于 `build/<board>`
 
 - ### Renode 仿真
-  - 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** 仿真平台, 将 `renode` 添加到 `/usr/bin` 路径或环境变量
-  - 运行 `开始调试` 或 `F5` 启动仿真, 打开 `TCP` 连接 `localhost:3333`, 观察串口输出
+  - 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)**
+  - **快速演示**：`./emulation/run.sh`，按提示选择板卡和模式（自动编译并启动）
+  - 详细说明见 [emulation/README.md](emulation/README.md)
+  - **F4 单机**：`renode --console emulation/stm32f4-disco/debug.resc`
+    - Shell：`TCP localhost:3333`
+    - GDB：`localhost:1234`
+  - **H7 单机**：`renode --console emulation/stm32h7-disco/debug.resc`
+    - Shell：`TCP localhost:3333`（USART1）
+    - GDB：`localhost:1234`
+    - H7 当前以 HSI 64 MHz 启动；Renode 的 USART1/6 模型固定为 200 MHz，板级代码默认按 200 MHz 计算波特率。真实板卡可用 `-DMOS_H7_UART_CLOCK=<PCLK2>` 覆盖
+  - **多机 M2M**：
+    - F4：`emulation/stm32f4-disco/multi_mach.resc`
+    - H7：`emulation/stm32h7-disco/multi_mach.resc`
+  - VS Code 中按 `F5`，选择 `Cortex Debug (F4)` 或 `Cortex Debug (H7)`
+
+- ### 使用 EIDE（旧版 F4 工作流）
+  - EIDE 配置仍保留在 `.eide/`，但多平台构建以 CMake 为准；如需 EIDE，请按 `examples/` 与 `vendor/stm32/` 的新布局重新配置
 
 ## 文档 📚
 
@@ -54,11 +82,17 @@
 ```
 .
 ├── 📁 emulation             // Renode 仿真脚本
-├── 📁 vendor                // 硬件抽象层
+├── 📁 examples              // 例程与板级支持
+│   ├── common/              // UART 驱动、平台头文件、共享测试
+│   └── boards/
+│       ├── stm32f4-disco/   // main.cpp / board.hpp / HAL conf / linker
+│       └── stm32h7-disco/
+├── 📁 vendor/stm32          // CMSIS + HAL/LL 依赖
 ├── 📁 core
 │   ├── 📁 external          // 外部库
 │   ├── 📁 arch              // 架构相关
-│   │   └── cpu.hpp          // 初始化/上下文切换
+│   │   ├── cpu.hpp          // 架构头文件入口
+│   │   └── cortex_m.hpp     // 上下文切换
 │   │
 │   ├── 📁 kernel            // 内核层
 │   │   ├── macro.hpp        // 内核常量宏
@@ -66,7 +100,8 @@
 │   │   ├── concepts.hpp     // 类型约束
 │   │   ├── data_type.hpp    // 基本数据结构
 │   │   ├── alloc.hpp        // 内存管理
-│   │   ├── global.hpp       // 内核层全局变量
+│   │   ├── global.hpp       // 内核全局变量声明
+│   │   ├── global.cpp       // 内核全局变量定义
 │   │   ├── printf.h/.c      // 线程安全的 printf
 │   │   ├── task.hpp         // 任务控制
 │   │   ├── sync.hpp         // 同步原语
@@ -78,13 +113,22 @@
 │   ├── config.h             // 系统配置
 │   ├── kernel.hpp           // 内核模块
 │   └── shell.hpp            // Shell 命令行
-│
-└── 📁 app                   // 用户层
-    ├── main.cpp             // 入口函数
-    └── test.hpp             // 测试代码
 ```
 
 ## 示例 🍎
+
+`examples/` 下每块板一个可独立编译的例程，结构说明见 [examples/README.md](examples/README.md)：
+
+| 例程 | 说明 |
+|---|---|
+| `boards/stm32f4-disco/main.cpp` | F4：Shell + LED + M2M + 内核测试 |
+| `boards/stm32h7-disco/main.cpp` | H7：Shell + LED + M2M + 内核测试 |
+
+```bash
+./build.sh stm32f4-disco
+./build.sh stm32h7-disco
+```
+
 - `Shell交互`
 ![shell_demo](pic/shell.gif)
 
@@ -104,105 +148,70 @@
 <img src="pic/tids.png" width="65%">
 </p>
 
-```C++
-// MOS Kernel & Shell
-#include "mos/kernel.hpp"
-#include "mos/shell.hpp"
+```cpp
+// 例程入口：examples/boards/stm32f4-disco/main.cpp
+#include "board.hpp"
+#include "kernel.hpp"
+#include "shell.hpp"
+#include "common/tests.hpp"
 
-// HAL and Device 
-#include "drivers/stm32f4xx/hal.hpp"
-#include "drivers/device/led.hpp"
-```
-```C++
-namespace MOS::User::Global
+using namespace MOS;
+namespace Board = Boards::STM32F4Disco;
+
+static void led_task()
 {
-    using namespace HAL::STM32F4xx;
-    using namespace Driver::Device;
-    using namespace DataType::SyncUartDev_t;
-
-    // Shell I/O UART and Buffer
-    auto stdio = SyncUartDev_t<32> {USARTx};
-
-    // LED red, green, blue
-    Device::LED_t leds[] = {...};
+	while (true) {
+		Board::led_toggle();
+		Kernel::Task::delay(500_ms);
+	}
 }
-```
-```C++
-namespace MOS::User::BSP
+
+static void m2m_task()
 {
-    using namespace Driver;
-    using namespace Global;
+	char msg[]           = "Hej! I'm Mx";
+	msg[sizeof(msg) - 2] = Board::machine_id();
 
-    void LED_Config()
-    {
-        for (auto& led: leds) {
-            led.init();
-        }
-    }
+	[&] -> Kernel::Async::Future_t<> {
+		while (true) {
+			Board::hub().send_line(msg);
+			co_await Kernel::Async::delay(500_ms);
+		}
+	}();
 
-    void USART_Config()
-    {
-        stdio.init(9600-8-1-N)
-             .rx_config(PXa)  // RX -> PXa
-             .tx_config(PYb)  // TX -> PYb
-             .it_enable(RXNE) // Enable RXNE interrupt
-             .enable();       // Enable UART
-    }
-    ...
+	while (true) {
+		LOG("rx -> \"%s\"", Board::hub().buf.recv().as_str());
+	}
 }
-```
-```C++
-namespace MOS::User::App
-{
-    // Blinky by Task::delay() -> Thread Model
-    void red_blink(Device::LED_t leds[])
-    {
-        while (true) {
-            leds[0].toggle(); // red
-            Task::delay(500_ms);
-        }
-    }
 
-    // Blinky by Async::delay() -> Coroutine Model
-    Async::Future_t<void> blue_blink(Device::LED_t leds[])
-    {
-        while (true) {
-            leds[1].toggle(); // blue
-            co_await Async::delay(500_ms);
-        }
-    }
-    ...
-}
-```
-```C++
 int main()
 {
-    using namespace MOS;
-    using namespace Kernel;
-    using namespace User::Global;
+	Board::init(); // 时钟、GPIO、USART、SysTick
 
-    BSP::config(); // Init periphs and clocks
+	Kernel::Task::create(Shell::launch<Board::Stdio::max_size()>, &Board::stdio().buf, 0, "shell");
+	Kernel::Task::create(led_task, nullptr, 1, "led");
+	Kernel::Task::create(m2m_task, nullptr, 2, "m2m");
 
-    Task::create( // Create a calendar with RTC
-        App::time_init, nullptr, 0, "time/init"
-    );
+	/* 测试例程 */
+	Kernel::Task::create(Examples::Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
+	Kernel::Task::create(Examples::Test::AsyncTest<300>, nullptr, 2, "async/test");
 
-    Task::create( // Create a shell on stdio
-        Shell::launch, &stdio.buf, 1, "shell"
-    );
+	Kernel::Scheduler::launch(); // 启动调度器，不返回
+}
+```
 
-    /* User Tasks */
-    Task::create(App::red_blink, &leds, 2, "blinky");
-    ...
+板级实现位于 `examples/boards/<board>/board.hpp`（header-only）：
 
-    /* Test examples */
-    Test::MutexTest();
-    Test::MsgQueueTest();
-    Test::AsyncTest();
-    ...
-    
-	// Launch Scheduler, never return
-    Scheduler::launch();
+```cpp
+namespace MOS::Boards::STM32F4Disco
+{
+	using Stdio = Common::SyncUart<MOS_CONF_SHELL_BUF_SIZE>;
+	using Hub   = Common::SyncUart<32>;
+
+	void init();
+	Stdio& stdio();
+	Hub& hub();
+	void led_toggle();
+	char machine_id();
 }
 ```
 
@@ -215,19 +224,101 @@ o'' )_____//   Build   @ TIME, DATE
 
 <Tid> <Name> <Priority> <Status> <Mem%>
 ---------------------------------------
- #0    idle     15       READY     10%
- #1    shell     1       BLOCKED   21%
- #2    blinky    2       RUNNING    9%
+ #0   shell        0     RUNNING     7%
+ #1   led          1     READY       7%
+ #2   m2m          2     READY       7%
+ #3   msgq/test    2     READY       7%
+ #4   async/test   2     READY       7%
+ #5   idle         127   READY      15%
 ---------------------------------------
 ```
+
+## 调度策略 🧭
+
+内核在编译期选择一种调度策略（`Kernel::Policy`），不同策略共享同一套上下文切换代码，无运行时开销：
+
+| 策略 | 就绪队列排序键 | 抢占 | 说明 |
+|---|---|---|---|
+| `RoundRobin` | 到达顺序 | 时间片 | 忽略优先级，FIFO 轮转 |
+| `PreemptPri` | 静态优先级 | 是 | 同优先级内时间片轮转（默认） |
+| `RateMonotonic` (RM) | 周期 `T` | 是 | 周期越短优先级越高；`D = T` 时固定优先级最优 |
+| `DeadlineMonotonic` (DM) | 相对截止期 `D` | 是 | RM 的推广，适用于 `D <= T` |
+| `EarliestDeadlineFirst` (EDF) | 绝对截止期 | 是 | 单核可抢占最优，`ΣC/T <= 1` 即可调度 |
+| `Cooperative` (Coop) | 静态优先级 | 否 | 仅在阻塞或主动 `Task::yield()` 时切换 |
+
+在 `core/config.h` 中选择：
+
+```c
+#define MOS_CONF_SCHED_POLICY EarliestDeadlineFirst
+```
+
+也可以直接通过 CMake 覆盖，无需修改源码：
+
+```bash
+cmake -S . -B build/stm32f4-disco -DMOS_SCHED_POLICY=EarliestDeadlineFirst
+```
+
+默认仍为 `PreemptPri`，行为与旧版本一致。
+
+### 周期任务
+
+```cpp
+static void control_job()
+{
+	while (true) {
+		/* work */
+		Kernel::Task::periodic_wait(); // 阻塞到下一次激活
+	}
+}
+
+Kernel::Task::create_periodic(
+    control_job, nullptr,
+    0,      // 基础优先级（RM/DM 会按 T/D 覆盖）
+    20_ms,  // 周期 T
+    20_ms,  // 相对截止期 D（0 表示等于周期）
+    "ctrl",
+    3_ms    // 可选 WCET，用于准入检查
+);
+```
+
+- 首个作业在创建时立即激活；此后每次 `periodic_wait()` 唤醒时刷新绝对截止期 `dl_abs = 激活时刻 + D`。
+- 提供 WCET 时执行准入检查：RM 使用 Liu & Layland 上界，DM 使用密度测试，EDF 使用 `ΣC/T <= 1`；不通过则返回 `nullptr`。
+- 每个作业的截止期丢失只记一次，可通过 `Task::missed_deadlines()` 查询。示例见 `examples/common/sched_test.hpp`。
+
+### 行为测试
+
+`examples/common/tests.hpp` 的 `SchedPolicyTest()` 随默认构建自动运行，按策略编译期选择用例，每个用例打印一行 `[TEST] ... PASS/FAIL`：
+
+| 用例 | 适用策略 | 验证内容 |
+|---|---|---|
+| RR fairness | 全部 | 同优先级（同截止期）任务公平轮转，CPU 份额差异 < 40% |
+| Preemption | PreemptPri/RM/DM | 高优先级任务抢占正忙的低优先级任务 |
+| Cooperative | Cooperative | 忙碌任务完成前高优先级任务得不到 CPU |
+| Deadline order | RM/DM/EDF | 按 T/D/绝对截止期排序运行（逆序创建），RM/DM 校验派生优先级 |
+| Periodic timing | PreemptPri/RM/DM/EDF | 激活间隔 ≈ 周期，EDF 下无截止期丢失 |
+| Nested PIP | PreemptPri/RM/DM | 嵌套互斥锁的优先级提升逐层回退，中优先级不发生反转 |
+
+### 说明
+
+- RM/DM 用 `floor(log2(T))` 将周期/截止期映射到优先级 `[0, 31]`，普通任务建议使用 `>= 32` 的优先级。
+- EDF 下没有截止期的任务（`Task::create`）排在周期任务之后，并以时间片轮转，不会被饿死。
+- `Cooperative` 没有 tick 抢占，CPU 密集型任务必须显式调用 `Task::yield()`。
+- 优先级继承（PIP）支持嵌套加锁，深度由 `MOS_CONF_PRI_STACK_DEPTH` 配置。
+- 使用 `-DMOS_SCHED_DEMO=ON`（或 `MOS_SCHED_DEMO=ON ./build.sh <board>`）构建策略演示；该构建会跳过 `msgq/test` 与 `async/test` 两个压力测试，以免占满页面池并淹没串口输出。
 
 ## 里程碑 📜
 
 📦 `v0.5`
 
 > ✅ 完成：
+> - 新增调度策略 `RateMonotonic` / `DeadlineMonotonic` / `EarliestDeadlineFirst` / `Cooperative`，补全 `RoundRobin`
+> - 新增周期任务 API `Task::create_periodic` / `Task::periodic_wait` 与可调度性检查
+> - 修复 PendSV 抢占 SysTick 导致的调度停摆、嵌套优先级继承与 tick 回绕比较
 > - **[实验性]** 移植到 `ESP32-C6(RISC-V)`
 > - **[实验性]** 使用 `Rust` 重写
+> - 支持 `STM32H747I-DISCO (Cortex-M7)`，与 F4 共用同一套内核
+> - STM32 HAL/CMSIS 依赖改为 git submodule 管理
+> - 例程按板卡组织为 `examples/boards/<board>/main.cpp`
 
 📦 `v0.4`
 

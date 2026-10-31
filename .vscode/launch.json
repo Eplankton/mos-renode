@@ -1,37 +1,47 @@
 {
     "version": "0.2.0",
     "configurations": [
-        // {
-        //     "name": "Debug by Renode",
-        //     "type": "cppdbg",
-        //     "request": "launch",
-        //     "preLaunchTask": "Run Renode",
-        //     "postDebugTask": "Close Renode",
-        //     "miDebuggerServerAddress": "localhost:1234",
-        //     "cwd": "${workspaceRoot}",
-        //     "miDebuggerPath": "arm-none-eabi-gdb",
-        //     "program": "${workspaceRoot}/build/Debug/${workspaceFolderBasename}.elf"
-        // },
         {
-            "name": "Cortex Debug",
+            "name": "Cortex Debug (F4)",
             "cwd": "${workspaceRoot}",
-            "executable": "${workspaceRoot}/build/${workspaceFolderBasename}.elf",
+            "executable": "${workspaceRoot}/build/stm32f4-disco/stm32f4-disco.elf",
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "external",
             "gdbTarget": "localhost:1234",
             "gdbPath": "arm-none-eabi-gdb",
-            "preLaunchTask": "Run Renode",
+            "preLaunchTask": "Run Renode (F4)",
             "postDebugTask": "Close Renode",
             "runToEntryPoint": "main",
             "loadFiles": [
-                "${workspaceRoot}/build/${workspaceFolderBasename}.elf"
+                "${workspaceRoot}/build/stm32f4-disco/stm32f4-disco.elf"
             ],
             "symbolFiles": [
                 {
-                    "file": "${workspaceRoot}/build/${workspaceFolderBasename}.elf"
+                    "file": "${workspaceRoot}/build/stm32f4-disco/stm32f4-disco.elf"
                 }
+            ]
+        },
+        {
+            "name": "Cortex Debug (H7)",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build/stm32h7-disco/stm32h7-disco.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "external",
+            "gdbTarget": "localhost:1234",
+            "gdbPath": "arm-none-eabi-gdb",
+            "preLaunchTask": "Run Renode (H7)",
+            "postDebugTask": "Close Renode",
+            "runToEntryPoint": "main",
+            "loadFiles": [
+                "${workspaceRoot}/build/stm32h7-disco/stm32h7-disco.elf"
             ],
+            "symbolFiles": [
+                {
+                    "file": "${workspaceRoot}/build/stm32h7-disco/stm32h7-disco.elf"
+                }
+            ]
         }
     ]
 }

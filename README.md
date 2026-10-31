@@ -33,17 +33,39 @@
 
 ## Start 📦
 
-- ### Use CMake
-  - Install the **CMake** and the `Arm GNU Toolchain`
-  - Run `./build.sh` to call **CMake Tools** and build the project
+- ### Fetch dependencies
+  - Run `git submodule update --init --recursive`
+  - STM32 dependencies are managed as submodules: `cmsis-core`, `cmsis-device-f4/h7`, `stm32f4xx-hal-driver`, `stm32h7xx-hal-driver`
 
-- ### Use EIDE
-  - Run `git submodule init && git submodule update` to pull the submodule `core`
-  - Install **[EIDE](https://em-ide.com)** extension and the `Arm GNU Toolchain`, then open `*.code-workspace` using `VS Code`
+- ### Use CMake (recommended)
+  - Install **CMake** and the `Arm GNU Toolchain`
+  - Run `./build.sh` and pick a board
+  - Or pass it directly:
+    ```bash
+    ./build.sh stm32f4-disco
+    ./build.sh stm32h7-disco
+    ./build.sh all
+    ./build.sh clean
+    ```
+  - Equivalent CMake invocation:
+    ```bash
+    cmake -S . -B build/stm32f4-disco -DMOS_BOARD=stm32f4-disco
+    cmake --build build/stm32f4-disco -j
+    ```
+  - Artifacts live in `build/<board>`
 
 - ### Renode Emulation
-  - Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** platform, and add `renode` to the `/usr/bin` path or environment variables
-  - Run `Start Debugging` or press `F5` to start, open a `TCP` connection on `localhost:3333`, and observe the serial output
+  - Install the **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)** platform
+  - **Quick demo**: `./emulation/run.sh`, then choose a board and mode (builds and starts automatically)
+  - See [emulation/README.md](emulation/README.md) for details
+  - **F4**: `renode --console emulation/stm32f4-disco/debug.resc` (Shell on TCP `3333`, GDB on `1234`)
+  - **H7**: `renode --console emulation/stm32h7-disco/debug.resc` (USART1 Shell on TCP `3333`, GDB on `1234`)
+    - The H7 board starts from HSI (64 MHz). Renode fixes USART1/6 to 200 MHz, so the board code defaults the baud-rate clock to 200 MHz. Override with `-DMOS_H7_UART_CLOCK=<PCLK2>` on real hardware.
+  - **Multi-machine M2M**: `emulation/stm32f4-disco/multi_mach.resc` (F4) or `emulation/stm32h7-disco/multi_mach.resc` (H7)
+  - In VS Code press `F5` and choose `Cortex Debug (F4)` or `Cortex Debug (H7)`
+
+- ### Use EIDE (legacy F4 workflow)
+  - The EIDE project is still present under `.eide/`, but multi-board builds use CMake. Reconfigure EIDE against the new `examples/` and `vendor/stm32/` layout if needed.
 
 
 ## Manual 📚
@@ -55,12 +77,18 @@
 
 ```
 .
-├── 📁 emulation             // Renode emulation script
-├── 📁 vendor                // Vendor HALs
+├── 📁 emulation             // Renode emulation scripts
+├── 📁 examples              // Examples and board support
+│   ├── common/              // UART driver, platform headers, shared tests
+│   └── boards/
+│       ├── stm32f4-disco/   // main.cpp / board.hpp / HAL conf / linker
+│       └── stm32h7-disco/
+├── 📁 vendor/stm32          // CMSIS + HAL/LL dependencies
 ├── 📁 core
 │   ├── 📁 external          // External Library
 │   ├── 📁 arch              // Architecture-Specific Code
-│   │   └── cpu.hpp          // Initialization/Context Switch assembly code
+│   │   ├── cpu.hpp          // Architecture header entry
+│   │   └── cortex_m.hpp     // Context Switching
 │   │
 │   ├── 📁 kernel            // Kernel Layer
 │   │   ├── macro.hpp        // Kernel Constants Macro
@@ -68,7 +96,8 @@
 │   │   ├── concepts.hpp     // Type Constraints
 │   │   ├── data_type.hpp    // Basic Data Structures
 │   │   ├── alloc.hpp        // Memory Management
-│   │   ├── global.hpp       // Kernel Global Variables
+│   │   ├── global.hpp       // Kernel global variable declarations
+│   │   ├── global.cpp       // Kernel global variable definitions
 │   │   ├── printf.h/.c      // Thread-Safe printf
 │   │   ├── task.hpp         // Task Management
 │   │   ├── sync.hpp         // Synchronization Primitives
@@ -80,13 +109,22 @@
 │   ├── config.h             // System Configuration
 │   ├── kernel.hpp           // Kernel Modules
 │   └── shell.hpp            // Shell Command Line
-│
-└── 📁 app                   // User Code
-    ├── main.cpp             // Entry Function
-    └── test.hpp             // Test Code
 ```
 
 ## Example 🍎
+
+Each board has one standalone program under `examples/`; see [examples/README.md](examples/README.md):
+
+| Example | Description |
+|---|---|
+| `boards/stm32f4-disco/main.cpp` | F4: shell + LED + M2M + kernel tests |
+| `boards/stm32h7-disco/main.cpp` | H7: shell + LED + M2M + kernel tests |
+
+```bash
+./build.sh stm32f4-disco
+./build.sh stm32h7-disco
+```
+
 `Shell Test`
 ![shell_demo](pic/shell.gif)
 
@@ -106,105 +144,70 @@
 <img src="pic/tids.png" width="65%">
 </p>
 
-```C++
-// MOS Kernel & Shell
-#include "mos/kernel.hpp"
-#include "mos/shell.hpp"
+```cpp
+// Entry point: examples/boards/stm32f4-disco/main.cpp
+#include "board.hpp"
+#include "kernel.hpp"
+#include "shell.hpp"
+#include "common/tests.hpp"
 
-// HAL and Device 
-#include "drivers/stm32f4xx/hal.hpp"
-#include "drivers/device/led.hpp"
-```
-```C++
-namespace MOS::User::Global
+using namespace MOS;
+namespace Board = Boards::STM32F4Disco;
+
+static void led_task()
 {
-    using namespace HAL::STM32F4xx;
-    using namespace Driver::Device;
-    using namespace DataType::SyncUartDev_t;
-
-    // Shell I/O UART and Buffer
-    auto stdio = SyncUartDev_t<32> {USARTx};
-
-    // LED red, green, blue
-    Device::LED_t leds[] = {...};
+	while (true) {
+		Board::led_toggle();
+		Kernel::Task::delay(500_ms);
+	}
 }
-```
-```C++
-namespace MOS::User::BSP
+
+static void m2m_task()
 {
-    using namespace Driver;
-    using namespace Global;
+	char msg[]           = "Hej! I'm Mx";
+	msg[sizeof(msg) - 2] = Board::machine_id();
 
-    void LED_Config()
-    {
-        for (auto& led: leds) {
-            led.init();
-        }
-    }
+	[&] -> Kernel::Async::Future_t<> {
+		while (true) {
+			Board::hub().send_line(msg);
+			co_await Kernel::Async::delay(500_ms);
+		}
+	}();
 
-    void USART_Config()
-    {
-        stdio.init(9600-8-1-N)
-             .rx_config(PXa)  // RX -> PXa
-             .tx_config(PYb)  // TX -> PYb
-             .it_enable(RXNE) // Enable RXNE interrupt
-             .enable();       // Enable UART
-    }
-    ...
+	while (true) {
+		LOG("rx -> \"%s\"", Board::hub().buf.recv().as_str());
+	}
 }
-```
-```C++
-namespace MOS::User::App
-{
-    // Blinky by Task::delay() -> Thread Model
-    void red_blink(Device::LED_t leds[])
-    {
-        while (true) {
-            leds[0].toggle(); // red
-            Task::delay(500_ms);
-        }
-    }
 
-    // Blinky by Async::delay() -> Coroutine Model
-    Async::Future_t<void> blue_blink(Device::LED_t leds[])
-    {
-        while (true) {
-            leds[1].toggle(); // blue
-            co_await Async::delay(500_ms);
-        }
-    }
-    ...
-}
-```
-```C++
 int main()
 {
-    using namespace MOS;
-    using namespace Kernel;
-    using namespace User::Global;
+	Board::init(); // clocks, GPIO, USART, SysTick
 
-    BSP::config(); // Init periphs and clocks
+	Kernel::Task::create(Shell::launch<Board::Stdio::max_size()>, &Board::stdio().buf, 0, "shell");
+	Kernel::Task::create(led_task, nullptr, 1, "led");
+	Kernel::Task::create(m2m_task, nullptr, 2, "m2m");
 
-    Task::create( // Create a calendar with RTC
-        App::time_init, nullptr, 0, "time/init"
-    );
+	/* Test examples */
+	Kernel::Task::create(Examples::Test::MsgQueueTest<3>, nullptr, 2, "msgq/test");
+	Kernel::Task::create(Examples::Test::AsyncTest<300>, nullptr, 2, "async/test");
 
-    Task::create( // Create a shell on stdio
-        Shell::launch, &stdio.buf, 1, "shell"
-    );
+	Kernel::Scheduler::launch(); // never returns
+}
+```
 
-    /* User Tasks */
-    Task::create(App::red_blink, &leds, 2, "blinky");
-    ...
+The board support lives in `examples/boards/<board>/board.hpp` and is header-only:
 
-    /* Test examples */
-    Test::MutexTest();
-    Test::MsgQueueTest();
-    Test::AsyncTest();
-    ...
-    
-	// Launch Scheduler, never return
-    Scheduler::launch();
+```cpp
+namespace MOS::Boards::STM32F4Disco
+{
+	using Stdio = Common::SyncUart<MOS_CONF_SHELL_BUF_SIZE>;
+	using Hub   = Common::SyncUart<32>;
+
+	void init();
+	Stdio& stdio();
+	Hub& hub();
+	void led_toggle();
+	char machine_id();
 }
 ```
 
@@ -217,11 +220,87 @@ o'' )_____//   Build   @ TIME, DATE
 
 <Tid> <Name> <Priority> <Status> <Mem%>
 ---------------------------------------
- #0    idle     15       READY     10%
- #1    shell     1       BLOCKED   21%
- #2    blinky    2       RUNNING    9%
+ #0   shell        0     RUNNING     7%
+ #1   led          1     READY       7%
+ #2   m2m          2     READY       7%
+ #3   msgq/test    2     READY       7%
+ #4   async/test   2     READY       7%
+ #5   idle         127   READY      15%
 ---------------------------------------
 ```
+
+## Scheduling Policies 🧭
+
+The kernel picks one scheduling policy at compile time (`Kernel::Policy`). All policies share the same context-switch path and add no runtime overhead:
+
+| Policy | Ready-queue key | Preemptive | Notes |
+|---|---|---|---|
+| `RoundRobin` | arrival order | time slice | priority ignored, FIFO rotation |
+| `PreemptPri` | static priority | yes | time-slice rotation within a priority (default) |
+| `RateMonotonic` (RM) | period `T` | yes | shorter period wins; optimal for fixed priority when `D = T` |
+| `DeadlineMonotonic` (DM) | relative deadline `D` | yes | generalizes RM to `D <= T` |
+| `EarliestDeadlineFirst` (EDF) | absolute deadline | yes | optimal for preemptive uniprocessor, schedulable when `ΣC/T <= 1` |
+| `Cooperative` (Coop) | static priority | no | switches only on block or explicit `Task::yield()` |
+
+Select it in `core/config.h`:
+
+```c
+#define MOS_CONF_SCHED_POLICY EarliestDeadlineFirst
+```
+
+or override it from CMake without touching the source:
+
+```bash
+cmake -S . -B build/stm32f4-disco -DMOS_SCHED_POLICY=EarliestDeadlineFirst
+```
+
+The default remains `PreemptPri`, so existing projects keep their behaviour.
+
+### Periodic tasks
+
+```cpp
+static void control_job()
+{
+	while (true) {
+		/* work */
+		Kernel::Task::periodic_wait(); // block until the next activation
+	}
+}
+
+Kernel::Task::create_periodic(
+    control_job, nullptr,
+    0,      // base priority (RM/DM override it from T/D)
+    20_ms,  // period T
+    20_ms,  // relative deadline D (0 means D = T)
+    "ctrl",
+    3_ms    // optional WCET for admission control
+);
+```
+
+- The first job starts immediately; every `periodic_wait()` wake-up refreshes the absolute deadline as `dl_abs = activation + D`.
+- With a WCET, admission control runs: Liu & Layland bound for RM, density test for DM, `ΣC/T <= 1` for EDF. A rejected task makes `create_periodic` return `nullptr`.
+- Each missed deadline is counted once per job; query it with `Task::missed_deadlines()`. See `examples/common/sched_test.hpp` for a demo.
+
+### Behavioral tests
+
+`SchedPolicyTest()` in `examples/common/tests.hpp` runs automatically in the default build. Batteries are selected at compile time for the active policy and each prints one `[TEST] ... PASS/FAIL` line:
+
+| Case | Policies | Checks |
+|---|---|---|
+| RR fairness | all | equal-priority (equal-deadline) tasks rotate fairly, share spread < 40% |
+| Preemption | PreemptPri/RM/DM | a higher-priority task preempts a busy lower-priority one |
+| Cooperative | Cooperative | the busy task keeps the CPU until it finishes; higher priority waits |
+| Deadline order | RM/DM/EDF | jobs run in T/D/absolute-deadline order (created in reverse); RM/DM also verify derived priorities |
+| Periodic timing | PreemptPri/RM/DM/EDF | activation interval stays near the period; no missed deadline under EDF |
+| Nested PIP | PreemptPri/RM/DM | nested-mutex priority boosts unwind level by level; no medium-priority inversion |
+
+### Notes
+
+- RM/DM map periods/deadlines onto priorities `[0, 31]` via `floor(log2(T))`; use `>= 32` for ordinary tasks.
+- Under EDF, tasks without a deadline (`Task::create`) rank after periodic ones and rotate by time slice, so they never starve.
+- `Cooperative` has no tick preemption: CPU-bound work must call `Task::yield()` explicitly.
+- Priority inheritance (PIP) supports nested locks; depth is set by `MOS_CONF_PRI_STACK_DEPTH`.
+- Build the policy demo with `-DMOS_SCHED_DEMO=ON` (or `MOS_SCHED_DEMO=ON ./build.sh <board>`). That build skips the `msgq/test` and `async/test` stress tests so they do not exhaust the page pool or flood the UART log.
 
 ## Milestone 🧾
 
@@ -229,6 +308,9 @@ o'' )_____//   Build   @ TIME, DATE
 📦 `v0.5`
 
 > ✅ Done：
+> - Added `RateMonotonic` / `DeadlineMonotonic` / `EarliestDeadlineFirst` / `Cooperative` policies and completed `RoundRobin`
+> - Added the periodic-task API `Task::create_periodic` / `Task::periodic_wait` with admission control
+> - Fixed the PendSV-over-SysTick stall, nested priority inheritance and tick-wrap comparisons
 > - **[Experimental]** Port to `ESP32-C6(RISC-V)`
 > - **[Experimental]** Rewrite it in Rust
 

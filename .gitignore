@@ -13,3 +13,7 @@
 # eide template
 *.ept
 *.eide-template
+
+# Python
+__pycache__/
+*.py[cod]

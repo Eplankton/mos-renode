@@ -1,3 +1,18 @@
 [submodule "core"]
 	path = core
 	url = https://github.com/Eplankton/mos-core.git
+[submodule "vendor/stm32/cmsis-core"]
+	path = vendor/stm32/cmsis-core
+	url = https://github.com/STMicroelectronics/cmsis-core.git
+[submodule "vendor/stm32/cmsis-device-f4"]
+	path = vendor/stm32/cmsis-device-f4
+	url = https://github.com/STMicroelectronics/cmsis-device-f4.git
+[submodule "vendor/stm32/cmsis-device-h7"]
+	path = vendor/stm32/cmsis-device-h7
+	url = https://github.com/STMicroelectronics/cmsis-device-h7.git
+[submodule "vendor/stm32/stm32f4xx-hal-driver"]
+	path = vendor/stm32/stm32f4xx-hal-driver
+	url = https://github.com/STMicroelectronics/stm32f4xx-hal-driver.git
+[submodule "vendor/stm32/stm32h7xx-hal-driver"]
+	path = vendor/stm32/stm32h7xx-hal-driver
+	url = https://github.com/STMicroelectronics/stm32h7xx-hal-driver.git

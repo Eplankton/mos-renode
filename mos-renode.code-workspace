@@ -27,7 +27,10 @@
             "editor.tabSize": 4,
             "editor.autoIndent": "advanced"
         },
-        "cortex-debug.variableUseNaturalFormat": true
+        "cortex-debug.variableUseNaturalFormat": true,
+        "clangd.arguments": [
+            "--query-driver=/usr/bin/arm-none-eabi-g*"
+        ]
     },
     "extensions": {
         "recommendations": [

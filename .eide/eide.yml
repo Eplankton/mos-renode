@@ -4,12 +4,15 @@ type: ARM
 deviceName: null
 packDir: null
 srcDirs:
-  - vendor
-  - app
   - core
+  - examples/common
+  - examples/boards/stm32f4-disco
+  - vendor/stm32/cmsis-device-f4/Source/Templates
+  - vendor/stm32/stm32f4xx-hal-driver/Src
 virtualFolder:
   name: <virtual_root>
-  files: []
+  files:
+    - examples/boards/stm32f4-disco/main.cpp
   folders: []
 dependenceList: []
 outDir: build
@@ -22,15 +25,31 @@ targets:
         - STM32F407xx
         - USE_FULL_LL_DRIVER
         - USE_HAL_DRIVER
-      incList: []
+        - MOS_ARCH_CORTEX_M4
+        - MOS_FAMILY_STM32F4
+        - 'MOS_DEVICE_HEADER="stm32f4xx.h"'
+        - 'MOS_MCU="STM32F407xx"'
+      incList:
+        - examples
+        - examples/common
+        - examples/boards/stm32f4-disco
+        - core
+        - core/kernel
+        - core/kernel/data_type
+        - core/arch
+        - vendor/stm32/cmsis-core/CMSIS/Core/Include
+        - vendor/stm32/cmsis-device-f4/Include
+        - vendor/stm32/stm32f4xx-hal-driver/Inc
       libList: []
     excludeList: []
+    settings:
+      debugger: cortex-debug
     toolchain: GCC
     toolchainConfigMap:
       GCC:
         archExtensions: ""
         cpuType: Cortex-M4
-        floatingPointHardware: none
+        floatingPointHardware: fpv4-sp-d16
         options:
           version: 5
           afterBuildTasks:
@@ -42,16 +61,16 @@ targets:
             ASM_FLAGS: -ffunction-sections -fdata-sections
           beforeBuildTasks: []
           c/cpp-compiler:
-            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=gnu++2b -fno-exceptions -fno-rtti
-            C_FLAGS: -Wno-empty-body
+            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=c++23 -fcoroutines -fno-exceptions -fno-rtti -g
+            C_FLAGS: -Wno-empty-body -g
             language-c: c17
-            language-cpp: c++17
+            language-cpp: c++23
             one-elf-section-per-data: true
             one-elf-section-per-function: true
-            optimization: level-debug
+            optimization: level-0
             warnings: all-warnings
           global:
-            $float-abi-type: softfp
+            $float-abi-type: hard
             misc-control: --specs=nosys.specs --specs=nano.specs
             output-debug-info: enable
           linker:
@@ -60,7 +79,7 @@ targets:
             LIB_FLAGS: -lm -lsupc++
             output-format: elf
             remove-unused-input-sections: true
-        scatterFilePath: ./vendor/STM32F407VGTx_FLASH.ld
+        scatterFilePath: ./examples/boards/stm32f4-disco/STM32F407VGTx_FLASH.ld
         storageLayout:
           RAM:
             - id: 1
@@ -80,6 +99,15 @@ targets:
               tag: IROM
         useCustomScatterFile: true
     uploadConfigMap:
+      Custom:
+        bin: ""
+        commandLine: ""
+        eraseChipCommand: ""
+      OpenOCD:
+        baseAddr: "0x08000000"
+        bin: ""
+        interface: stlink
+        target: stm32f4x
       pyOCD:
         baseAddr: "0x08000000"
         bin: .\build\Debug\stm32f4xx_cubemx_demo.hex
@@ -87,22 +115,38 @@ targets:
         otherCmds: ""
         speed: 4M
         targetName: STM32F407VGTX
-    uploader: pyOCD
+    uploader: OpenOCD
   Release:
     cppPreprocessAttrs:
       defineList:
         - STM32F407xx
         - USE_FULL_LL_DRIVER
         - USE_HAL_DRIVER
-      incList: []
+        - MOS_ARCH_CORTEX_M4
+        - MOS_FAMILY_STM32F4
+        - 'MOS_DEVICE_HEADER="stm32f4xx.h"'
+        - 'MOS_MCU="STM32F407xx"'
+      incList:
+        - examples
+        - examples/common
+        - examples/boards/stm32f4-disco
+        - core
+        - core/kernel
+        - core/kernel/data_type
+        - core/arch
+        - vendor/stm32/cmsis-core/CMSIS/Core/Include
+        - vendor/stm32/cmsis-device-f4/Include
+        - vendor/stm32/stm32f4xx-hal-driver/Inc
       libList: []
     excludeList: []
+    settings:
+      debugger: cortex-debug
     toolchain: GCC
     toolchainConfigMap:
       GCC:
         archExtensions: ""
         cpuType: Cortex-M4
-        floatingPointHardware: none
+        floatingPointHardware: fpv4-sp-d16
         options:
           version: 5
           afterBuildTasks:
@@ -114,16 +158,18 @@ targets:
             ASM_FLAGS: -ffunction-sections -fdata-sections
           beforeBuildTasks: []
           c/cpp-compiler:
-            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=gnu++2b -fno-exceptions -fno-rtti -flto
+            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -fno-exceptions -fno-rtti -flto -fcoroutines
             C_FLAGS: -Wno-empty-body -Wno-deprecated-volatile
             language-c: c17
-            language-cpp: c++17
+            language-cpp: c++23
+            no-exceptions: true
+            no-rtti: true
             one-elf-section-per-data: true
             one-elf-section-per-function: true
             optimization: level-size
             warnings: all-warnings
           global:
-            $float-abi-type: softfp
+            $float-abi-type: hard
             misc-control: --specs=nosys.specs --specs=nano.specs
             output-debug-info: enable
           linker:
@@ -132,26 +178,27 @@ targets:
             LIB_FLAGS: -lm -lsupc++
             output-format: elf
             remove-unused-input-sections: true
-        scatterFilePath: ./vendor/STM32F407VGTx_FLASH.ld
+        scatterFilePath: ./examples/boards/stm32f4-disco/STM32F407VGTx_FLASH.ld
         storageLayout:
-          RAM:
-            - id: 1
-              isChecked: true
-              mem:
-                size: "0x5000"
-                startAddr: "0x20000000"
-              noInit: false
-              tag: IRAM
-          ROM:
-            - id: 1
-              isChecked: true
-              isStartup: true
-              mem:
-                size: "0x10000"
-                startAddr: "0x08000000"
-              tag: IROM
+          RAM: []
+          ROM: []
         useCustomScatterFile: true
     uploadConfigMap:
+      OpenOCD:
+        baseAddr: "0x08000000"
+        bin: ""
+        interface: stlink-v1
+        target: stm32f4x
+      STLink:
+        address: "0x08000000"
+        bin: ""
+        elFile: None
+        optionBytes: .eide/release.st.option.bytes.ini
+        otherCmds: ""
+        proType: SWD
+        resetMode: default
+        runAfterProgram: true
+        speed: 4000
       pyOCD:
         baseAddr: "0x08000000"
         bin: .\build\Debug\stm32f4xx_cubemx_demo.hex
@@ -159,4 +206,4 @@ targets:
         otherCmds: ""
         speed: 4M
         targetName: STM32F407VGTX
-    uploader: pyOCD
+    uploader: OpenOCD

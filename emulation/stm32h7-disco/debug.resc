@@ -1,0 +1,35 @@
+:name: STM32H747I-DISCO
+:description: MOS RTOS on STM32H747I-DISCO (Cortex-M7)
+
+# Run from the repository root:
+#   renode --console emulation/stm32h7-disco/debug.resc
+# Then use VS Code "Cortex Debug (H7)" or connect GDB to localhost:1234.
+$name?="STM32H747I-DISCO"
+$add_on_repl?=$CWD/emulation/stm32h7-disco/add_on.repl
+$bin_path?=$CWD/build/stm32h7-disco/stm32h7-disco.elf
+
+mach create $name
+machine LoadPlatformDescription @platforms/boards/stm32h747-disco.repl
+machine LoadPlatformDescription $add_on_repl
+
+# The H7 BSP currently runs from HSI (64 MHz).
+sysbus.nvic Frequency 64000000
+
+# GDB for cortex-debug / arm-none-eabi-gdb
+machine StartGdbServer 1234
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+
+runMacro $reset
+
+logLevel -1 gpioPortA.myLED
+
+# Shell UART (USART1) -> TCP 3333
+emulation CreateServerSocketTerminal 3333 "uart-con" false
+connector Connect sysbus.usart1 uart-con
+
+# Readiness marker used by emulation/run.sh
+echo "MOS_RENODE_READY"

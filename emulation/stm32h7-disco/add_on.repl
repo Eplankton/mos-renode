@@ -1,0 +1,7 @@
+myLED: Miscellaneous.LED @ gpioPortA
+
+UserButton: Miscellaneous.Button @ gpioPortA
+    -> gpioPortA@0
+
+gpioPortA:
+    1 -> myLED@0

@@ -2,47 +2,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "CMake Build (F4)",
             "type": "shell",
-            "command": "${command:eide.project.build}",
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "flash",
-            "type": "shell",
-            "command": "${command:eide.project.uploadToDevice}",
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "build and flash",
-            "type": "shell",
-            "command": "${command:eide.project.buildAndFlash}",
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "rebuild",
-            "type": "shell",
-            "command": "${command:eide.project.rebuild}",
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "clean",
-            "type": "shell",
-            "command": "${command:eide.project.clean}",
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "Build application",
-            "type": "shell",
-            "command": "${command:eide.project.build}",
-            "problemMatcher": [
-                "$gcc"
-            ],
+            "command": "./build.sh stm32f4-disco",
+            "problemMatcher": ["$gcc"],
             "group": "build",
             "presentation": {
                 "reveal": "always",
@@ -50,12 +13,10 @@
             }
         },
         {
-            "label": "CMake Build",
+            "label": "CMake Build (H7)",
             "type": "shell",
-            "command": "./build.sh",
-            "problemMatcher": [
-                "$gcc"
-            ],
+            "command": "./build.sh stm32h7-disco",
+            "problemMatcher": ["$gcc"],
             "group": "build",
             "presentation": {
                 "reveal": "always",
@@ -63,17 +24,14 @@
             }
         },
         {
-            "label": "Run Renode",
+            "label": "Run Renode (F4)",
             "type": "shell",
             "command": "renode",
             "args": [
-                "--console", // Don't use GUI
-                "${workspaceFolder}/emulation/debug_config.resc" // Add the script for emulation
+                "--console",
+                "${workspaceFolder}/emulation/stm32f4-disco/debug.resc"
             ],
-            "dependsOn": [
-                // "Build application"
-                "CMake Build"
-            ],
+            "dependsOn": ["CMake Build (F4)"],
             "isBackground": true,
             "problemMatcher": {
                 "source": "Renode",
@@ -83,7 +41,88 @@
                 "background": {
                     "activeOnStart": true,
                     "beginsPattern": "Renode, version .*",
-                    "endsPattern": ".*GDB server with all CPUs started on port.*"
+                    "endsPattern": ".*MOS_RENODE_READY.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode (H7)",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "--console",
+                "${workspaceFolder}/emulation/stm32h7-disco/debug.resc"
+            ],
+            "dependsOn": ["CMake Build (H7)"],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*MOS_RENODE_READY.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode (F4 multi-machine)",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "--console",
+                "${workspaceFolder}/emulation/stm32f4-disco/multi_mach.resc"
+            ],
+            "dependsOn": ["CMake Build (F4)"],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*MOS_RENODE_READY.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode (H7 multi-machine)",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "--console",
+                "${workspaceFolder}/emulation/stm32h7-disco/multi_mach.resc"
+            ],
+            "dependsOn": ["CMake Build (H7)"],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*MOS_RENODE_READY.*"
                 }
             },
             "group": "build",
@@ -97,14 +136,6 @@
             "command": "exit",
             "type": "shell",
             "problemMatcher": []
-        }
-    ],
-    "inputs": [
-        {
-            "id": "terminate",
-            "type": "command",
-            "command": "workbench.action.tasks.terminate",
-            "args": "terminateAll"
         }
     ]
 }
