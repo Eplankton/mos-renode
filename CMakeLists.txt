@@ -146,6 +146,53 @@ if(NOT EXISTS "${ETL_DIR}/CMakeLists.txt")
     message(FATAL_ERROR "ETL submodule is missing. Run: git submodule update --init --recursive")
 endif()
 
+# Submodules checked out at another commit than the one this tree records,
+# typically after a `git pull` without `--recurse-submodules`. Only a
+# warning: someone working on core may be ahead on purpose.
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    set(_mos_checked_submodules core)
+    if(MOS_DEVICE_HEADER)
+        list(APPEND _mos_checked_submodules vendor/stm32)
+    endif()
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule status -- ${_mos_checked_submodules}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE _mos_submodule_status
+        RESULT_VARIABLE _mos_submodule_rc
+        ERROR_QUIET
+    )
+    if(_mos_submodule_rc EQUAL 0)
+        string(REPLACE "\n" ";" _mos_submodule_lines "${_mos_submodule_status}")
+        foreach(_line IN LISTS _mos_submodule_lines)
+            # "+<checked-out sha> <path> (...)": differs from the recorded commit
+            if(_line MATCHES "^\\+([0-9a-f]+) ([^ ]+)")
+                set(_actual "${CMAKE_MATCH_1}")
+                set(_path "${CMAKE_MATCH_2}")
+                execute_process(
+                    COMMAND ${GIT_EXECUTABLE} rev-parse --short ":${_path}"
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    OUTPUT_VARIABLE _expected
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                )
+                string(SUBSTRING "${_actual}" 0 7 _actual)
+                message(WARNING
+                    "Submodule '${_path}' is at ${_actual}, but this tree expects ${_expected}.\n"
+                    "If you just pulled, run: git submodule update --init --recursive\n"
+                    "(or pull with --recurse-submodules). Ignore this if you are working on it.")
+            endif()
+        endforeach()
+    endif()
+endif()
+
+# A core from before mos::core cannot be built at all
+if(NOT EXISTS "${CORE_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR
+        "The core submodule is too old for this tree (no core/CMakeLists.txt).\n"
+        "Run: git submodule update --init --recursive")
+endif()
+
 # The kernel: mos::core (sources, include root, ETL)
 add_subdirectory(${CORE_DIR})
 
