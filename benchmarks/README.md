@@ -63,7 +63,7 @@ kernel and its porting layer:
 
 | | MOS | FreeRTOS V11.3.3 |
 |---|---|---|
-| Scheduling | `PreemptPri`, 50 ms time slice | preemptive, time slicing every tick, port-optimised task selection |
+| Scheduling | `PP` (preemptive priority), 50 ms time slice | preemptive, time slicing every tick, port-optimised task selection |
 | Thread-Metric port | `thread_metric/tm_port.hpp` | upstream's `ports/freertos/tm_port.c`, unmodified; `freertos/tm_main.c` adds the STM32 glue |
 | RTOS-Benchmark port | `rtos_benchmark/bench_porting_layer_mos.hpp` | `freertos/rb_port.cpp`, after upstream's K64 port |
 

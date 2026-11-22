@@ -8,7 +8,7 @@
 # Non-interactive:
 #   ./emulation/run.sh stm32f4-disco demo
 #   ./emulation/run.sh stm32h7-disco debug
-#   ./emulation/run.sh hifive1 multi
+#   ./emulation/run.sh riscv32-virt multi
 #   ./emulation/run.sh stm32f4-disco multi-debug
 #   ./emulation/run.sh <board> <mode> --no-build
 #
@@ -46,7 +46,7 @@ Usage:
   ./emulation/run.sh                              interactive board + mode selection
   ./emulation/run.sh stm32f4-disco demo           single machine + UART console
   ./emulation/run.sh stm32h7-disco debug          single machine + GDB server
-  ./emulation/run.sh hifive1 multi                dual-machine M2M + UART multiplexer
+  ./emulation/run.sh riscv32-virt multi           dual-machine M2M + UART multiplexer
   ./emulation/run.sh stm32f4-disco multi-debug    dual-machine M2M + GDB 1234/1235
   ./emulation/run.sh <board> <mode> --no-build    skip the build step
 

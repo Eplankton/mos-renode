@@ -18,7 +18,7 @@ examples/boards/<board>/
 ├── main.cpp          # the board's example program (shell, LED, M2M, tests)
 ├── board.hpp         # header-only board support: init, UART, LED, _putchar, IRQs
 ├── uart.hpp          # line-buffered UART (Drivers::SyncUart) on a hardware backend
-├── <backend>.hpp     # stm32_usart.hpp + stm32_ll.hpp, or sifive_uart.hpp
+├── <backend>.hpp     # stm32_usart.hpp + stm32_ll.hpp, or ns16550_uart.hpp
 ├── <startup/HAL/linker files>
 ├── board.cmake       # build description, read by CMakeLists.txt
 ├── board.env         # facts for the shell scripts
@@ -35,7 +35,7 @@ Current boards:
 |---|---|---|
 | `stm32f4-disco` | Cortex-M4F | STM32 HAL/LL from `vendor/stm32` |
 | `stm32h7-disco` | Cortex-M7 | LL only; USART clock fixed to Renode's 200 MHz model (`-DMOS_H7_UART_CLOCK` on hardware) |
-| `hifive1` | RV32IMAC | Registers from SiFive's SVD (`vendor/sifive`), no SDK runtime; 16 KB RAM, so the msgq/async stress tests are left out |
+| `riscv32-virt` | RV32IMAC | Renode's RISC-V32 Virtual (`riscv_virt`) plus a second UART and a GPIO, see `renode/riscv32-virt.repl` |
 
 Each board is self-contained: the UART driver is copied into every board
 directory instead of being shared, so a board can be changed (or taken

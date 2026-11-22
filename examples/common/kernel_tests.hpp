@@ -129,7 +129,7 @@ namespace MOS::Test
 	}
 
 	// Preemptive priority policy: a higher-priority task must run even while
-	// a lower-priority task is busy. (PreemptPri / RM / DM)
+	// a lower-priority task is busy. (PP / RM / DM)
 	inline void preempt_test()
 	{
 		static volatile Task::Tick_t high_ran = 0, low_killed = 0;
@@ -163,7 +163,7 @@ namespace MOS::Test
 		);
 	}
 
-	// Cooperative: no tick preemption. The busy medium task must finish before
+	// COOP: no tick preemption. The busy medium task must finish before
 	// the (higher-priority) delayed task gets any CPU at all.
 	inline void coop_test()
 	{
@@ -190,7 +190,7 @@ namespace MOS::Test
 
 		const bool ok = high_ran != 0 && med_done != 0 && high_ran >= med_done;
 		kprintf(
-		    "[TEST] Cooperative: med done @%u, high @%u -> %s\n",
+		    "[TEST] COOP: med done @%u, high @%u -> %s\n",
 		    med_done, high_ran, ok ? "PASS" : "FAIL"
 		);
 	}
@@ -226,7 +226,7 @@ namespace MOS::Test
 		bool ok = order[0] != 0 && order[1] != 0 && order[2] != 0 &&
 		          order[2] < order[1] && order[1] < order[0];
 
-		if constexpr (P != Policy::EarliestDeadlineFirst) {
+		if constexpr (P != Policy::EDF) {
 			// RM/DM must also derive the static priorities from T/D.
 			ok = ok && tcbs[2]->get_pri() < tcbs[1]->get_pri() &&
 			          tcbs[1]->get_pri() < tcbs[0]->get_pri();
@@ -292,7 +292,7 @@ namespace MOS::Test
 	// Nested PIP: two waiters boost the owner through two nested mutexes. The
 	// owner's priority must unwind one level per unlock, back to its base.
 	// Also checks the classic L/M/H inversion: M must not run before H gets
-	// the lock. (PreemptPri / RM / DM)
+	// the lock. (PP / RM / DM)
 	inline void nested_pip_test()
 	{
 		constexpr Task::Prior_t P_HB = 1, P_HA = 2, P_M = 5, P_L = 10;
@@ -532,9 +532,9 @@ namespace MOS::Test
 
 		rr_fairness_test();
 
-		if constexpr (DEFAULT_POLICY == Policy::PreemptPri ||
-		              DEFAULT_POLICY == Policy::RateMonotonic ||
-		              DEFAULT_POLICY == Policy::DeadlineMonotonic) {
+		if constexpr (DEFAULT_POLICY == Policy::PP ||
+		              DEFAULT_POLICY == Policy::RM ||
+		              DEFAULT_POLICY == Policy::DM) {
 			preempt_test();
 			nested_pip_test();
 			pip_multi_waiter_test();
@@ -544,20 +544,20 @@ namespace MOS::Test
 
 		msgq_recheck_test();
 
-		if constexpr (DEFAULT_POLICY == Policy::Cooperative) {
+		if constexpr (DEFAULT_POLICY == Policy::COOP) {
 			coop_test();
 		}
 
-		if constexpr (DEFAULT_POLICY == Policy::RateMonotonic ||
-		              DEFAULT_POLICY == Policy::DeadlineMonotonic ||
-		              DEFAULT_POLICY == Policy::EarliestDeadlineFirst) {
+		if constexpr (DEFAULT_POLICY == Policy::RM ||
+		              DEFAULT_POLICY == Policy::DM ||
+		              DEFAULT_POLICY == Policy::EDF) {
 			deadline_order_test<DEFAULT_POLICY>();
 		}
 
-		if constexpr (DEFAULT_POLICY == Policy::PreemptPri ||
-		              DEFAULT_POLICY == Policy::RateMonotonic ||
-		              DEFAULT_POLICY == Policy::DeadlineMonotonic ||
-		              DEFAULT_POLICY == Policy::EarliestDeadlineFirst) {
+		if constexpr (DEFAULT_POLICY == Policy::PP ||
+		              DEFAULT_POLICY == Policy::RM ||
+		              DEFAULT_POLICY == Policy::DM ||
+		              DEFAULT_POLICY == Policy::EDF) {
 			periodic_timing_test();
 		}
 

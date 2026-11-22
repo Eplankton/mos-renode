@@ -28,7 +28,7 @@ use `renode.sh` as well; see [benchmarks/README.md](../benchmarks/README.md).
 
 - Renode in `PATH`
 - `python3`
-- `arm-none-eabi-gdb` (STM32) or `riscv-none-elf-gdb` (HiFive1, from the
+- `arm-none-eabi-gdb` (STM32) or `riscv-none-elf-gdb` (RISC-V, from the
   xPack toolchain; found under `~/.local/xpacks/` if not in `PATH`) for
   `demo` / `multi` modes (the `debug` modes do not start GDB automatically)
 
@@ -52,7 +52,7 @@ Non-interactive form:
 ./emulation/run.sh stm32f4-disco multi
 ./emulation/run.sh stm32h7-disco multi-debug
 ./emulation/run.sh stm32f4-disco demo --no-build
-./emulation/run.sh hifive1 demo                 # RISC-V
+./emulation/run.sh riscv32-virt demo            # RISC-V
 ```
 
 | Mode | Behavior |
@@ -71,7 +71,7 @@ can gate CI:
 
 ```bash
 ./emulation/selftest.sh                           # every board, all six policies
-./emulation/selftest.sh stm32h7-disco --policies PreemptPri,Cooperative
+./emulation/selftest.sh stm32h7-disco --policies PP,COOP
 ./emulation/selftest.sh --no-build                # reuse build/selftest/...
 ```
 
@@ -83,22 +83,22 @@ Builds and UART logs go to `build/selftest/<board>/<policy>/`.
 |---|---|---|---|---|
 | STM32F4 | `3333` | `1234` | `3333` (M1), `3334` (M2) | `1234`, `1235` |
 | STM32H747 | `3333` | `1234` | `3333` (M1), `3334` (M2) | `1234`, `1235` |
-| HiFive1 | `3333` | `1234` | `3333` (M1), `3334` (M2) | `1234`, `1235` |
+| RISC-V32 Virtual | `3333` | `1234` | `3333` (M1), `3334` (M2) | `1234`, `1235` |
 
-## HiFive1 model notes
+## RISC-V32 Virtual model notes
 
-Renode has no HiFive1 board file, so `examples/boards/hifive1/renode/` builds one on top
-of `platforms/cpus/sifive-fe310.repl`:
+`examples/boards/riscv32-virt/renode/riscv32-virt.repl` builds on Renode's
+`platforms/cpus/riscv_virt.repl` (QEMU-virt-like: CLINT, PLIC, NS16550,
+RAM at `0x80000000`):
 
-- `clint.frequency` is set to 32768 Hz, the RTC clock that drives `mtime`
-  on the real board (the stock model uses 62 MHz). The firmware assumes it.
-- The PRCI clock block is not modeled; `board.resc` tags its registers so
-  the firmware's "oscillator ready" wait completes.
-- `cpu PerformanceInMips 16` matches the 16 MHz core clock of the BSP.
-- Renode's `SiFive_GPIO` only latches an external level on a pin whose
-  `input_en` and `output_en` bits are both set. `multi_mach.resc` sets them
-  for the id strap (GPIO9) before pressing it on M1, and the firmware samples
-  the strap once at boot.
+- The CPU type gains `_zicsr_zifencei`; the stock `rv32imac` makes Renode
+  warn on every CSR access.
+- A second NS16550 (`0x10001000`, PLIC source 4) carries the M1/M2 hub.
+- A SiFive GPIO model (`0x10012000`) adds the LED (GPIO0) and the
+  machine-id strap (GPIO1). It only latches an external level on a pin
+  whose `input_en` and `output_en` bits are both set, so `multi_mach.resc`
+  sets them before pressing the strap on M1.
+- `clint` runs at 10 MHz (`MOS_RISCV_MTIME_HZ` in `board.cmake`).
 
 The UART sockets speak telnet. `uart_console.py` handles the negotiation and
 can prefix output from multiple machines with `[M1]` / `[M2]`.
@@ -113,8 +113,8 @@ renode --console examples/boards/stm32h7-disco/renode/debug.resc
 ```
 
 Then press `F5` and choose `Cortex Debug (F4)`, `Cortex Debug (H7)` or
-`RISC-V Debug (HiFive1)` (it uses `emulation/riscv-gdb.sh`). The matching
-VS Code tasks are `Run Renode (F4)` / `(H7)` / `(HiFive1)`.
+`RISC-V Debug (RISC-V32 Virtual)` (it uses `emulation/riscv-gdb.sh`). The
+matching VS Code tasks are `Run Renode (F4)` / `(H7)` / `(RISC-V32 Virtual)`.
 
 For multi-machine debugging, use the `Run Renode (<board> multi-machine)`
 task and attach GDB to `1234` / `1235`.

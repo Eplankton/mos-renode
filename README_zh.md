@@ -29,53 +29,42 @@
 - `mos-renode` - 使用 Renode 仿真运行，**[链接](https://gitee.com/Eplankton/mos-renode)**
 - `mos-rust` - Vibe Coding 出来的缝合怪，**[链接](https://gitee.com/Eplankton/mos-rust)**
 
-## 快速开始 📦
+## 启动 📦
 
-### 准备
+- ### 拉取依赖
+  - 运行 `git submodule update --init --recursive`
+  - 基准测试的子模块默认不拉取，运行基准时自动拉取
 
-- 安装 **CMake**、**[Arm GNU Toolchain](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)** 和 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)**
-- HiFive1 另需 **[xPack RISC-V GCC](https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases)**，解压到 `~/.local/xpacks/` 即可被自动找到（或用 `-DMOS_RISCV_TOOLCHAIN_DIR=<dir>/bin` 指定）
-- 拉取子模块：`git submodule update --init --recursive`（CMake 也会按需自动初始化）。基准测试用到的子模块（Thread-Metric、RTOS-Benchmark、FreeRTOS-Kernel）默认不拉取，第一次运行基准时自动拉取
+- ### 工具链
+  - 安装 **CMake** 和 `Arm GNU Toolchain`
+  - RISC-V 需要 **[xPack RISC-V GCC](https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases)**，解压到 `~/.local/xpacks/` 即可
 
-### 构建
+- ### 构建
+  ```bash
+  ./build.sh                  # 菜单选择板卡
+  ./build.sh stm32f4-disco    # stm32h7-disco / riscv32-virt / all / clean
+  ```
+  - 产物位于 `build/<board>`
 
-```bash
-./build.sh                  # 菜单选择板卡
-./build.sh stm32f4-disco    # 或 stm32h7-disco / hifive1 / all / clean
-```
+- ### Renode 仿真
+  - 安装 **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)**
+  - **快速演示**：`./emulation/run.sh`，按提示选择板卡和模式
+  - **自测**：`./emulation/selftest.sh`（3 块板 × 6 种调度策略）
+  - **单机**：`renode --console examples/boards/<board>/renode/debug.resc`
+    - Shell：`TCP localhost:3333`
+    - GDB：`localhost:1234`
+  - **多机 M2M**：`examples/boards/<board>/renode/multi_mach.resc`
+  - VS Code 中按 `F5` 调试
+  - 详细说明见 [emulation/README.md](emulation/README.md)
 
-产物位于 `build/<board>/`, `build.sh` 只是对 CMake 的封装：
-
-```bash
-cmake -S . -B build/stm32f4-disco -DMOS_BOARD=stm32f4-disco
-cmake --build build/stm32f4-disco -j
-```
-
-### 仿真
-
-```bash
-./emulation/run.sh                       # 菜单选择板卡和模式，自动编译并启动
-./emulation/run.sh stm32f4-disco demo    # 也可以直接指定
-./emulation/selftest.sh                  # 自测：3 块板 × 6 种调度策略
-```
-
-也可以直接用 Renode 打开板卡目录下的脚本：
-
-| 板卡 | 单机 | 双机 M2M |
-|---|---|---|
-| F4 | `examples/boards/stm32f4-disco/renode/debug.resc` | `.../multi_mach.resc` |
-| H7 | `examples/boards/stm32h7-disco/renode/debug.resc` | `.../multi_mach.resc` |
-| HiFive1 | `examples/boards/hifive1/renode/debug.resc` | `.../multi_mach.resc` |
-
-单机脚本的 Shell 在 TCP `3333`，GDB 在 `1234`。在 VS Code 中按 `F5`，选择 `Cortex Debug (F4)`、`Cortex Debug (H7)` 或 `RISC-V Debug (HiFive1)` 即可连接。运行模式、端口和各板的模型说明见 [emulation/README.md](emulation/README.md)。
-
-### EIDE
-
-用 VS Code 的 [EIDE](https://github.com/github0null/eide) 插件打开项目根目录，可以构建、烧录 F4 示例（Debug / Release 两个目标）。它的源文件与 `examples/boards/stm32f4-disco/board.cmake` 一致，修改 `BOARD_SOURCES` 时请同步 `.eide/eide.yml`。多平台构建、自测与基准测试以 CMake 为准。
+- ### 使用 EIDE（仅 STM32F4）
+  - 打开项目根目录即可构建 F4 示例
+  - 修改 `board.cmake` 的源文件时同步 `.eide/eide.yml`
 
 ## 性能 📊
 
-在同一台 Renode 仿真机器上（Cortex-M4F 内核，按 100 MIPS 执行指令；SysTick 时钟 16 MHz，系统 tick 1 kHz；计时分辨率 100 ns），用同样的编译选项、计时代码和测试源码对比 MOS 与 **FreeRTOS V11.3.3**。加速比是 MOS 相对 FreeRTOS 的倍数，大于 1 表示 MOS 表现更好。
+- 对比 **FreeRTOS V11.3.3**：同一台 Renode 机器（Cortex-M4F，100 MIPS，1 kHz tick，计时分辨率 100 ns），同样的编译选项与测试源码
+- 加速比大于 1 表示 MOS 表现更好
 
 **Thread-Metric**：吞吐量，次/秒，越高越好
 
@@ -102,80 +91,64 @@ cmake --build build/stm32f4-disco -j
 | 消息队列接收（发生切换） | 2,400 | 2,900 | 1.21 ✅|
 | Yield（发生切换） | 800 | 700 | 0.88 |
 
-- MOS 在阻塞与唤醒类操作上更快：信号量、互斥量、消息队列，以及相关的吞吐测试（1.2–1.7 倍）。
-- FreeRTOS 在单纯的任务切换上更快：yield 约快 1.1 倍，协作调度约快 1.2 倍。
-- Renode 不是周期精确的模拟器，这些数字反映的是两个内核代码路径的相对长短，不代表真实硬件上的耗时。
-- 复现：`./benchmarks/compare.sh`（约 2 分钟）。完整数据、测试配置和不可比的项目见 [benchmarks/README.md](benchmarks/README.md)。
+- MOS 在阻塞与唤醒类操作上更快；FreeRTOS 在单纯的任务切换上更快
+- Renode 不是周期精确的模拟器，数字只反映代码路径的相对长短
+- 复现：`./benchmarks/compare.sh`，完整数据见 [benchmarks/README.md](benchmarks/README.md)
 
 ## 文档 📚
 
 - **[用户手册(中文)](manual_zh.pdf) | [Manual(English) from **DeepWiki**](https://deepwiki.com/Eplankton/mos-renode)**
 
-## 结构 🔍
-
+## 架构 🔍
 <img src="pic/mos_arch.svg">
 
-### 仓库
-
-```text
+```
 .
-├── core/            // 内核（子模块），见下文
-├── examples/
-│   ├── common/      // 各板共用的测试与演示
-│   └── boards/      // 每块板一个目录
-├── emulation/       // Renode 启动与自测脚本
-├── benchmarks/      // 基准测试与 FreeRTOS 对比
-├── vendor/
-│   ├── stm32/       // CMSIS、HAL/LL（子模块）
-│   └── sifive/      // 由 SVD 生成的寄存器定义
-├── build.sh         // 构建入口
+├── 📁 core               // 内核（子模块）
+├── 📁 examples           // 例程与板级支持，见 examples/README.md
+│   ├── common/           // 共享测试与演示
+│   └── boards/           // 每块板一个目录
+├── 📁 emulation          // Renode 仿真脚本
+├── 📁 benchmarks         // 基准测试与 FreeRTOS 对比
+├── 📁 vendor/stm32       // CMSIS + HAL/LL
+├── build.sh
 └── CMakeLists.txt
 ```
 
-各目录的说明：[examples](examples/README.md)（板卡目录约定、如何新增板卡）、[emulation](emulation/README.md)、[benchmarks](benchmarks/README.md)、[vendor/sifive](vendor/sifive/README.md)。
-
-### 内核
-
-```text
-core/
-├── kernel.hpp          // 内核总头文件
-├── shell.hpp           // 命令行
-├── config.h            // 配置项
-├── CMakeLists.txt      // mos::core 库
+```
+core
+├── 📁 arch               // 架构移植层
+│   ├── cpu.hpp           // 移植接口
+│   ├── cpu_isr.hpp       // 异常入口
+│   ├── cortex_m/         // Cortex-M4/M7
+│   └── riscv32/          // RV32
 │
-├── arch/               // 架构移植层
-│   ├── cpu.hpp         // 移植接口与编译期检查
-│   ├── cpu_isr.hpp     // 异常入口分发
-│   ├── cortex_m/       // Cortex-M4/M7
-│   └── riscv32/        // RV32 机器模式
+├── 📁 kernel             // 内核层
+│   ├── macro.hpp         // 常量
+│   ├── type.hpp          // 基础类型
+│   ├── concepts.hpp      // 类型约束
+│   ├── data_type/        // 基本数据结构
+│   ├── alloc.hpp         // 内存管理
+│   ├── global.hpp/.cpp   // 全局变量
+│   ├── task.hpp          // 任务控制
+│   ├── policy.hpp        // 调度策略
+│   ├── scheduler.hpp     // 调度器
+│   ├── sync.hpp          // 同步原语
+│   ├── ipc.hpp           // 进程间通信
+│   ├── async.hpp         // 异步协程
+│   └── utils.hpp         // 其他工具
 │
-├── kernel/
-│   ├── macro.hpp       // 常量
-│   ├── type.hpp        // 基础类型
-│   ├── concepts.hpp    // 类型约束
-│   ├── data_type/      // 链表、位图、TCB、页面
-│   ├── alloc.hpp       // 页面分配
-│   ├── global.hpp/.cpp // 全局状态
-│   ├── task.hpp        // 任务
-│   ├── policy.hpp      // 调度策略
-│   ├── scheduler.hpp   // 调度器
-│   ├── sync.hpp        // 信号量、互斥量、条件变量
-│   ├── ipc.hpp         // 消息队列
-│   ├── async.hpp       // 无栈协程
-│   └── utils.hpp       // 临界区、日志
-│
-├── libc/               // printf、newlib 存根
-└── external/etl/       // ETL（子模块）
+├── 📁 libc               // printf、newlib 存根
+├── 📁 external           // ETL
+├── config.h              // 系统配置
+├── kernel.hpp            // 内核模块
+└── shell.hpp             // 命令行
 ```
 
 ## 示例 🍎
 
-每块板有一个可独立编译的例程 `examples/boards/<board>/main.cpp`：
-
-| 板卡 | 内容 |
-|---|---|
-| F4、H7 | Shell、LED、双机 M2M、内核测试 |
-| HiFive1 | Shell、LED、双机 M2M、调度策略测试（不含消息队列与协程压力测试） |
+每块板一个例程 `examples/boards/<board>/main.cpp`：
+- Shell + LED + M2M + 内核测试，F4、H7、RISC-V32 Virtual 相同
 
 ```cpp
 // examples/boards/stm32f4-disco/main.cpp
@@ -232,7 +205,7 @@ int main()
 }
 ```
 
-板级支持位于 `examples/boards/<board>/board.hpp`（header-only），对例程提供同一组接口：
+板级接口 `board.hpp`（header-only）：
 
 ```cpp
 namespace MOS::Boards::STM32F4Disco
@@ -248,7 +221,7 @@ namespace MOS::Boards::STM32F4Disco
 }
 ```
 
-启动后的输出：
+启动输出：
 
 ```plain
  A_A       _   [name]  @ x.x.x(Version)
@@ -288,30 +261,18 @@ o'' )_____//   Build   @ TIME, DATE
 
 ## 调度策略 🧭
 
-内核在编译期选择一种调度策略（`Kernel::Policy`），不同策略共享同一套上下文切换代码，无运行时开销：
+编译期选择，共享同一套上下文切换代码：
 
-| 策略 | 就绪队列排序键 | 抢占 | 说明 |
-|---|---|---|---|
-| `RoundRobin` | 到达顺序 | 时间片 | 忽略优先级，FIFO 轮转 |
-| `PreemptPri` | 静态优先级 | 是 | 同优先级内时间片轮转（默认） |
-| `RateMonotonic` (RM) | 周期 `T` | 是 | 周期越短优先级越高；`D = T` 时固定优先级最优 |
-| `DeadlineMonotonic` (DM) | 相对截止期 `D` | 是 | RM 的推广，适用于 `D <= T` |
-| `EarliestDeadlineFirst` (EDF) | 绝对截止期 | 是 | 单核可抢占最优，`ΣC/T <= 1` 即可调度 |
-| `Cooperative` (Coop) | 静态优先级 | 否 | 仅在阻塞或主动 `Task::yield()` 时切换 |
+| 策略 | 全称 | 排序键 | 抢占 | 说明 |
+|---|---|---|---|---|
+| `RR` | Round-Robin | 到达顺序 | 时间片 | FIFO 轮转，忽略优先级 |
+| `PP` | Preemptive Priority | 优先级 | 是 | 同优先级时间片轮转（默认） |
+| `RM` | Rate-Monotonic | 周期 `T` | 是 | 周期越短优先级越高 |
+| `DM` | Deadline-Monotonic | 相对截止期 `D` | 是 | 适用于 `D <= T` |
+| `EDF` | Earliest-Deadline-First | 绝对截止期 | 是 | `ΣC/T <= 1` 即可调度 |
+| `COOP` | Cooperative | 优先级 | 否 | 仅在阻塞或 `yield()` 时切换 |
 
-在 `core/config.h` 中选择：
-
-```c
-#define MOS_CONF_SCHED_POLICY EarliestDeadlineFirst
-```
-
-也可以直接通过 CMake 覆盖，无需修改源码：
-
-```bash
-cmake -S . -B build/stm32f4-disco -DMOS_SCHED_POLICY=EarliestDeadlineFirst
-```
-
-默认仍为 `PreemptPri`，行为与旧版本一致。
+- 在 `core/config.h` 中设置 `MOS_CONF_SCHED_POLICY`，或 `cmake -DMOS_SCHED_POLICY=EDF`
 
 ### 周期任务
 
@@ -334,90 +295,67 @@ Kernel::Task::create_periodic(
 );
 ```
 
-- 首个作业在创建时立即激活；此后每次 `periodic_wait()` 唤醒时刷新绝对截止期 `dl_abs = 激活时刻 + D`。
-- 提供 WCET 时执行准入检查：RM 使用 Liu & Layland 上界，DM 使用密度测试，EDF 使用 `ΣC/T <= 1`；不通过则返回 `nullptr`。
-- 每个作业的截止期丢失只记一次，可通过 `Task::missed_deadlines()` 查询。示例见 `examples/common/sched_demo.hpp`。
+- 提供 WCET 时做准入检查（RM：Liu & Layland，DM：密度测试，EDF：`ΣC/T <= 1`），不通过返回 `nullptr`
+- 截止期丢失次数：`Task::missed_deadlines()`，示例见 `examples/common/sched_demo.hpp`
 
 ### 行为测试
 
-`examples/common/kernel_tests.hpp` 的 `SchedPolicyTest()` 随默认构建自动运行，按策略编译期选择用例，每个用例打印一行 `[TEST] ... PASS/FAIL`：
+`examples/common/kernel_tests.hpp`，每个用例打印 `[TEST] ... PASS/FAIL`：
 
-| 用例 | 适用策略 | 验证内容 |
+| 用例 | 策略 | 验证内容 |
 |---|---|---|
-| RR fairness | 全部 | 同优先级（同截止期）任务公平轮转，CPU 份额差异 < 40% |
-| Preemption | PreemptPri/RM/DM | 高优先级任务抢占正忙的低优先级任务 |
-| Cooperative | Cooperative | 忙碌任务完成前高优先级任务得不到 CPU |
-| Deadline order | RM/DM/EDF | 按 T/D/绝对截止期排序运行（逆序创建），RM/DM 校验派生优先级 |
-| Periodic timing | PreemptPri/RM/DM/EDF | 激活间隔 ≈ 周期，EDF 下无截止期丢失 |
-| Nested PIP | PreemptPri/RM/DM | 嵌套互斥锁的优先级提升逐层回退，中优先级不发生反转 |
-| PIP multi-waiter | PreemptPri/RM/DM | 同一互斥量上两个等待者先后提升持有者，解锁后回到基础优先级 |
-| PIP unrelated unlock | PreemptPri/RM/DM | 释放一个无人等待的互斥量，不会撤销另一个仍持有的互斥量带来的提升 |
-| PIP transitive | PreemptPri/RM/DM | H 等 M、M 等 L 时，L 继承 H 的优先级 |
-| MsgQueue recheck | 全部 | 发送者因有空位被唤醒、但空位又被抢走时会重新等待，而不是丢弃消息 |
-
-在 Renode 中运行全部策略与板卡：
-
-```bash
-./emulation/selftest.sh                         # 3 块板 x 6 种策略
-./emulation/selftest.sh stm32f4-disco --policies PreemptPri,EarliestDeadlineFirst
-```
+| RR fairness | 全部 | 同优先级任务公平轮转 |
+| Preemption | PP/RM/DM | 高优先级抢占低优先级 |
+| COOP | COOP | 忙碌任务完成前不被抢占 |
+| Deadline order | RM/DM/EDF | 按 T/D/截止期顺序运行 |
+| Periodic timing | PP/RM/DM/EDF | 激活间隔等于周期 |
+| Nested PIP | PP/RM/DM | 嵌套锁的优先级逐层回退 |
+| PIP multi-waiter | PP/RM/DM | 多个等待者先后提升持有者 |
+| PIP unrelated unlock | PP/RM/DM | 无关解锁不撤销提升 |
+| PIP transitive | PP/RM/DM | H 等 M、M 等 L 时 L 继承 H |
+| MsgQueue recheck | 全部 | 空位被抢走时重新等待，不丢消息 |
 
 ### 说明
 
-- RM/DM 用 `floor(log2(T))` 将周期/截止期映射到优先级 `[0, 31]`，普通任务建议使用 `>= 32` 的优先级。
-- EDF 下没有截止期的任务（`Task::create`）排在周期任务之后，并以时间片轮转，不会被饿死。
-- `Cooperative` 没有 tick 抢占，CPU 密集型任务必须显式调用 `Task::yield()`。
-- 优先级继承（PIP）按互斥量跟踪：支持嵌套加锁、同一互斥量多个等待者以及传递继承（H 等 M、M 等 L 时 L 继承 H），无深度上限。
-- 使用 `-DMOS_SCHED_DEMO=ON`（或 `MOS_SCHED_DEMO=ON ./build.sh <board>`）构建策略演示；该构建会跳过 `msgq/test` 与 `async/test` 两个压力测试，以免占满页面池并淹没串口输出。
+- RM/DM 把周期/截止期映射到优先级 `[0, 31]`，普通任务建议用 `>= 32`
+- EDF 下无截止期的任务排在周期任务之后，时间片轮转
+- `COOP` 没有 tick 抢占，CPU 密集任务需主动 `Task::yield()`
+- `-DMOS_SCHED_DEMO=ON` 构建策略演示
 
 ## 移植 🔌
 
-内核只通过 `MOS::Arch` 中的一组固定接口与 CPU 交互，接口约定写在 [core/arch/cpu.hpp](core/arch/cpu.hpp)，缺任何一项都会在编译期报错：
+内核只通过 `MOS::Arch` 接口访问 CPU，约定见 [core/arch/cpu.hpp](core/arch/cpu.hpp)，缺少任何一项会编译报错：
 
-| 接口 | Cortex-M | RV32（HiFive1） |
+| 接口 | Cortex-M | RV32（RISC-V32 Virtual） |
 |---|---|---|
 | `irq_save/irq_restore/irq_enabled` | PRIMASK | `mstatus.MIE` |
 | `request_switch()` | 挂起 PendSV | 写 CLINT `msip`（软件中断） |
 | `start_first()` | `svc 0` | 从任务帧 `mret` |
 | `init_stack()` | 硬件栈帧 + R4–R11 (+EXC_RETURN) | 32 字帧：`mepc`/`ra`/`a0`/`mstatus` |
-| 系统 tick | SysTick → `Scheduler::tick()` | CLINT `mtimecmp`（32768 Hz，余数累加保证平均 1 kHz） |
+| 系统 tick | SysTick → `Scheduler::tick()` | CLINT `mtimecmp`（频率由板卡设定，余数累加保证平均 1 kHz） |
 | `idle_wait()` | `wfi` | `wfi` |
 
-每个移植提供两个头文件：`port.hpp`（原语）与 `port_isr.hpp`（异常入口与上下文切换，在 `scheduler.hpp` 末尾引入）。上下文切换汇编与内核之间只约定 `cur_tcb`、`next_tcb()` 和 `MOS_TCB_SP_OFFSET`（TCB 中保存 SP 的偏移，由 `static_assert` 锁定）。
-
-新增一个架构：在 `core/arch/<arch>/` 实现这两个头文件，在 `cpu.hpp`/`cpu_isr.hpp` 中加一个分支，再按 [examples/README.md](examples/README.md) 添加板卡。RV32 移植的说明：
-
-- 所有 trap 共用一个入口，完整整数上下文保存在被中断任务的栈上，随后切到中断栈（复用启动栈）执行 C++ 处理函数；挂起的切换请求在同一次 trap 里完成，不再二次进入。
-- 外部中断经 PLIC 分发到板级 `mos_external_irq(source)`。
-- 小 RAM 板可在 CMake 中覆盖 `MOS_CONF_POOL_SIZE` 等配置（HiFive1 使用 9 页、12 个任务）。
-- 基准测试端口目前仅支持 Cortex-M。
+- 每个移植提供 `port.hpp`（原语）和 `port_isr.hpp`（异常入口与上下文切换）
+- 新增架构：实现 `core/arch/<arch>/`，在 `cpu.hpp`/`cpu_isr.hpp` 中加分支，再按 [examples/README.md](examples/README.md) 添加板卡
+- RV32：所有 trap 共用一个入口；外部中断经 PLIC 分发到 `mos_external_irq()`
 
 ## 里程碑 📜
 
 📦 `v0.5`
 
 > ✅ 完成：
->
-> - **调度**
->   - 新增调度策略 `RateMonotonic` / `DeadlineMonotonic` / `EarliestDeadlineFirst` / `Cooperative`，补全 `RoundRobin`
->   - 新增周期任务 API `Task::create_periodic` / `Task::periodic_wait` 与可调度性检查
->   - 缩短调度器切换路径：一次带切换的 yield 从 101 条指令降到 86 条，协作调度吞吐提高 19%
-> - **内核修复**
->   - 修复 PendSV 抢占 SysTick 导致的调度停摆、嵌套优先级继承与 tick 回绕比较
->   - 优先级继承改为按互斥量跟踪：修复同一互斥量多个等待者、无关解锁时的错误回退，支持传递继承
->   - `MsgQueue_t` 唤醒后重新检查队列，修复静默丢消息；新增 `IPC::FOREVER`、`send_from_isr/recv_from_isr`
->   - 信号量改为令牌直接移交，`kill`/`resume` 处于等待中的任务不再破坏计数与链表
->   - `CondVar_t::wait` 原子地释放锁并阻塞；ISR 唤醒（`up_from_isr`）在中断返回时立即切换
->   - `IrqGuard_t` 改为保存/恢复 PRIMASK；TCB 取消 packed；idle 无事可做时 `WFI`
-> - **移植**
->   - 架构移植层重构为 `MOS::Arch` 接口（`core/arch/cpu.hpp`），内核不再含 Cortex-M 专有代码
->   - 支持 `STM32H747I-DISCO (Cortex-M7)`，与 F4 共用同一套内核
->   - 移植到 `SiFive HiFive1 (FE310, RV32IMAC)`，通过全部调度策略测试，支持 Shell 与双机 M2M；寄存器定义由 SiFive 官方 `design.svd` 生成（`vendor/sifive/`）
-> - **工程与测试**
->   - 每块板的例程、驱动、构建与仿真配置集中在 `examples/boards/<board>/`，脚本自动发现板卡；core 提供 `mos::core` CMake 库
->   - STM32 HAL/CMSIS 依赖改为 git submodule 管理
->   - 新增 `emulation/selftest.sh` 自测（3 块板 × 6 种策略）
->   - 新增 Thread-Metric 与 RTOS-Benchmark 基准测试，以及与 FreeRTOS 的对比（`benchmarks/compare.sh`）
+> - 新增调度策略 `RM` / `DM` / `EDF` / `COOP`，补全 `RR`
+> - 新增周期任务 `Task::create_periodic` / `Task::periodic_wait` 与准入检查
+> - 优化调度器切换路径，yield 指令数从 101 降到 86
+> - 修复 PendSV 抢占 SysTick 导致的停摆、tick 回绕比较
+> - 优先级继承改为按互斥量跟踪，支持嵌套、多等待者与传递继承
+> - 修复 `MsgQueue_t` 丢消息、信号量计数，`CondVar_t::wait` 原子化
+> - 架构层重构为 `MOS::Arch` 接口
+> - 支持 `STM32H747I-DISCO (Cortex-M7)`
+> - 移植到 RISC-V：Renode 的 `RISC-V32 Virtual (RV32IMAC)`
+> - 板卡目录 `examples/boards/<board>/`，脚本自动发现板卡
+> - 新增 `emulation/selftest.sh` 自测
+> - 新增 Thread-Metric、RTOS-Benchmark 基准与 FreeRTOS 对比
 > - **[实验性]** 移植到 `ESP32-C6(RISC-V)`
 > - **[实验性]** 使用 `Rust` 重写
 

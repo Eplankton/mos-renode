@@ -1,9 +1,10 @@
 /*
- * Minimal machine-mode startup for the SiFive FE310 (HiFive1).
+ * Minimal machine-mode startup for Renode's RISC-V32 Virtual.
  *
- * Sets up gp/sp, copies .data, clears .bss, runs the C++ constructors and
- * calls main(). Traps before the scheduler starts land in `early_trap`
- * (a stop); Arch::sched_init() installs the kernel trap vector.
+ * The image is loaded straight into RAM, so .data needs no copy. Sets up
+ * gp/sp, clears .bss, runs the C++ constructors and calls main(). Traps
+ * before the scheduler starts land in `early_trap` (a stop);
+ * Arch::sched_init() installs the kernel trap vector.
  */
 
     .section .init, "ax", @progbits
@@ -21,19 +22,8 @@ _start:
     la      t0, early_trap
     csrw    mtvec, t0
 
-    /* Copy .data from flash */
-    la      a0, __data_load
-    la      a1, __data_start
-    la      a2, __data_end
-1:  bgeu    a1, a2, 2f
-    lw      t0, 0(a0)
-    sw      t0, 0(a1)
-    addi    a0, a0, 4
-    addi    a1, a1, 4
-    j       1b
-
     /* Clear .bss */
-2:  la      a0, __bss_start
+    la      a0, __bss_start
     la      a1, __bss_end
 3:  bgeu    a0, a1, 4f
     sw      zero, 0(a0)

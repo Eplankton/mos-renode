@@ -7,8 +7,8 @@
 # Exit status is non-zero if any test fails or a run does not finish.
 #
 #   ./emulation/selftest.sh                           all boards, all policies
-#   ./emulation/selftest.sh hifive1                   one board
-#   ./emulation/selftest.sh --policies PreemptPri,EarliestDeadlineFirst
+#   ./emulation/selftest.sh riscv32-virt              one board
+#   ./emulation/selftest.sh --policies PP,EDF
 #   ./emulation/selftest.sh --no-build
 #
 # Builds go to build/selftest/<board>/<policy>/, logs next to them.
@@ -20,7 +20,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 source "$ROOT/emulation/renode.sh"
 
-ALL_POLICIES=(RoundRobin PreemptPri RateMonotonic DeadlineMonotonic EarliestDeadlineFirst Cooperative)
+ALL_POLICIES=(RR PP RM DM EDF COOP)
 
 BOARDS=()
 POLICIES=("${ALL_POLICIES[@]}")

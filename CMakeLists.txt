@@ -77,16 +77,9 @@ project(mos-renode C CXX ASM)
 # Options
 # ==============================================================================
 # Overrides MOS_CONF_SCHED_POLICY from config.h when non-empty, e.g.
-#   -DMOS_SCHED_POLICY=EarliestDeadlineFirst
-set(MOS_SCHED_POLICY "" CACHE STRING "Scheduler policy override")
-set_property(CACHE MOS_SCHED_POLICY PROPERTY STRINGS
-    RoundRobin
-    PreemptPri
-    RateMonotonic
-    DeadlineMonotonic
-    EarliestDeadlineFirst
-    Cooperative
-)
+#   -DMOS_SCHED_POLICY=EDF
+set(MOS_SCHED_POLICY "" CACHE STRING "Scheduler policy override: RR, PP, RM, DM, EDF or COOP")
+set_property(CACHE MOS_SCHED_POLICY PROPERTY STRINGS RR PP RM DM EDF COOP)
 
 set(MOS_SCHED_DEMO OFF CACHE BOOL "Build the periodic scheduling demo")
 

@@ -138,9 +138,9 @@
             "problemMatcher": []
         },
         {
-            "label": "CMake Build (HiFive1)",
+            "label": "CMake Build (RISC-V32 Virtual)",
             "type": "shell",
-            "command": "./build.sh hifive1",
+            "command": "./build.sh riscv32-virt",
             "problemMatcher": ["$gcc"],
             "group": "build",
             "presentation": {
@@ -149,14 +149,14 @@
             }
         },
         {
-            "label": "Run Renode (HiFive1)",
+            "label": "Run Renode (RISC-V32 Virtual)",
             "type": "shell",
             "command": "renode",
             "args": [
                 "--console",
-                "${workspaceFolder}/examples/boards/hifive1/renode/debug.resc"
+                "${workspaceFolder}/examples/boards/riscv32-virt/renode/debug.resc"
             ],
-            "dependsOn": ["CMake Build (HiFive1)"],
+            "dependsOn": ["CMake Build (RISC-V32 Virtual)"],
             "isBackground": true,
             "problemMatcher": {
                 "source": "Renode",
@@ -176,14 +176,14 @@
             }
         },
         {
-            "label": "Run Renode (HiFive1 multi-machine)",
+            "label": "Run Renode (RISC-V32 Virtual multi-machine)",
             "type": "shell",
             "command": "renode",
             "args": [
                 "--console",
-                "${workspaceFolder}/examples/boards/hifive1/renode/multi_mach.resc"
+                "${workspaceFolder}/examples/boards/riscv32-virt/renode/multi_mach.resc"
             ],
-            "dependsOn": ["CMake Build (HiFive1)"],
+            "dependsOn": ["CMake Build (RISC-V32 Virtual)"],
             "isBackground": true,
             "problemMatcher": {
                 "source": "Renode",

@@ -1,11 +1,11 @@
-:name: HiFive1
-:description: MOS RTOS on SiFive HiFive1 (FE310, RV32IMAC)
+:name: RISC-V32 Virtual
+:description: MOS RTOS on Renode's RISC-V32 Virtual (RV32IMAC)
 
 # Run from the repository root:
-#   renode --console examples/boards/hifive1/renode/debug.resc
+#   renode --console examples/boards/riscv32-virt/renode/debug.resc
 # Then connect riscv-none-elf-gdb to localhost:1234.
-$name?="HiFive1"
-$bin_path?=$CWD/build/hifive1/hifive1.elf
+$name?="RISCV32-VIRT"
+$bin_path?=$CWD/build/riscv32-virt/riscv32-virt.elf
 
 mach create $name
 include $ORIGIN/board.resc

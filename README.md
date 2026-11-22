@@ -29,53 +29,42 @@
 - `mos-renode` - Test on Renode emulation, check **[here](https://github.com/Eplankton/mos-renode)**.
 - `mos-rust` - A "Vibe Coding" Chimera, check **[here](https://github.com/Eplankton/mos-rust)**.
 
-## Getting Started 📦
+## Start 📦
 
-### Prerequisites
+- ### Dependencies
+  - Run `git submodule update --init --recursive`
+  - Benchmark submodules are skipped and fetched when a benchmark runs
 
-- **CMake**, the **[Arm GNU Toolchain](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)** and **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)**
-- For HiFive1, the **[xPack RISC-V GCC](https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases)**: unpack it under `~/.local/xpacks/` to be found automatically (or pass `-DMOS_RISCV_TOOLCHAIN_DIR=<dir>/bin`)
-- Submodules: `git submodule update --init --recursive` (CMake also initializes the ones it needs). The benchmark submodules (Thread-Metric, RTOS-Benchmark, FreeRTOS-Kernel) are skipped and fetched the first time a benchmark runs
+- ### Toolchain
+  - Install **CMake** and the `Arm GNU Toolchain`
+  - RISC-V needs the **[xPack RISC-V GCC](https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases)**, unpacked under `~/.local/xpacks/`
 
-### Build
+- ### Build
+  ```bash
+  ./build.sh                  # board menu
+  ./build.sh stm32f4-disco    # stm32h7-disco / riscv32-virt / all / clean
+  ```
+  - Artifacts in `build/<board>`
 
-```bash
-./build.sh                  # board menu
-./build.sh stm32f4-disco    # or stm32h7-disco / hifive1 / all / clean
-```
+- ### Renode emulation
+  - Install **[Renode](https://github.com/renode/renode?tab=readme-ov-file#installation)**
+  - **Quick demo**: `./emulation/run.sh`, then pick a board and a mode
+  - **Self-test**: `./emulation/selftest.sh` (3 boards x 6 policies)
+  - **Single machine**: `renode --console examples/boards/<board>/renode/debug.resc`
+    - Shell: `TCP localhost:3333`
+    - GDB: `localhost:1234`
+  - **Multi-machine M2M**: `examples/boards/<board>/renode/multi_mach.resc`
+  - Press `F5` in VS Code to debug
+  - Details in [emulation/README.md](emulation/README.md)
 
-Artifacts go to `build/<board>/`. `build.sh` wraps CMake:
-
-```bash
-cmake -S . -B build/stm32f4-disco -DMOS_BOARD=stm32f4-disco
-cmake --build build/stm32f4-disco -j
-```
-
-### Emulate
-
-```bash
-./emulation/run.sh                       # pick a board and a mode, builds and starts Renode
-./emulation/run.sh stm32f4-disco demo    # or name them directly
-./emulation/selftest.sh                  # self-test: 3 boards x 6 policies
-```
-
-The board scripts can also be opened in Renode directly:
-
-| Board | Single machine | Two machines (M2M) |
-|---|---|---|
-| F4 | `examples/boards/stm32f4-disco/renode/debug.resc` | `.../multi_mach.resc` |
-| H7 | `examples/boards/stm32h7-disco/renode/debug.resc` | `.../multi_mach.resc` |
-| HiFive1 | `examples/boards/hifive1/renode/debug.resc` | `.../multi_mach.resc` |
-
-The single-machine scripts put the shell on TCP `3333` and GDB on `1234`. In VS Code, press `F5` and choose `Cortex Debug (F4)`, `Cortex Debug (H7)` or `RISC-V Debug (HiFive1)`. Modes, ports and per-board model notes: [emulation/README.md](emulation/README.md).
-
-### EIDE
-
-Open the repository root with the [EIDE](https://github.com/github0null/eide) VS Code extension to build and flash the F4 example (Debug / Release targets). Its sources mirror `examples/boards/stm32f4-disco/board.cmake`; keep `.eide/eide.yml` in sync when `BOARD_SOURCES` changes. Multi-board builds, self-tests and benchmarks use CMake.
+- ### EIDE (F4 only)
+  - Open the repository root to build the F4 example
+  - Keep `.eide/eide.yml` in sync with the sources in `board.cmake`
 
 ## Performance 📊
 
-MOS against **FreeRTOS V11.3.3** on the same Renode machine (Cortex-M4F core executing 100 MIPS, 16 MHz SysTick clock, 1 kHz OS tick, 100 ns timer resolution), with the same compiler flags, timing code and test sources. Speedup is MOS over FreeRTOS: above 1 means MOS performs better.
+- Against **FreeRTOS V11.3.3**: same Renode machine (Cortex-M4F, 100 MIPS, 1 kHz tick, 100 ns timer resolution), same compiler flags and test sources
+- Speedup above 1 means MOS performs better
 
 **Thread-Metric**: throughput, operations per second, higher is better
 
@@ -102,80 +91,64 @@ MOS against **FreeRTOS V11.3.3** on the same Renode machine (Cortex-M4F core exe
 | Message queue receive (context switch) | 2,400 | 2,900 | 1.21 ✅|
 | Yield (context switch) | 800 | 700 | 0.88 |
 
-- MOS is faster at blocking and waking: semaphores, mutexes, message queues, and the related throughput tests (1.2–1.7x).
-- FreeRTOS is faster at plain task switching: yield is about 1.1x and cooperative scheduling about 1.2x quicker.
-- Renode is not cycle-accurate. The numbers compare the length of the two kernels' code paths, not timing on real hardware.
-- Reproduce: `./benchmarks/compare.sh` (about 2 minutes). Full results, setup and what is not comparable: [benchmarks/README.md](benchmarks/README.md).
+- MOS is faster at blocking and waking; FreeRTOS is faster at plain task switching
+- Renode is not cycle-accurate; the numbers only compare code path lengths
+- Reproduce: `./benchmarks/compare.sh`, full results in [benchmarks/README.md](benchmarks/README.md)
 
 ## Manual 📚
 
 - **[用户手册(中文)](manual_zh.pdf) | [Manual(English) from **DeepWiki**](https://deepwiki.com/Eplankton/mos-renode)**
 
-## Layout 🔍
-
+## Architecture 🔍
 <img src="pic/mos_arch.svg">
 
-### Repository
-
-```text
+```
 .
-├── core/            // kernel (submodule), see below
-├── examples/
-│   ├── common/      // tests and demos shared by the boards
-│   └── boards/      // one directory per board
-├── emulation/       // Renode launcher and self-test
-├── benchmarks/      // benchmarks and the FreeRTOS comparison
-├── vendor/
-│   ├── stm32/       // CMSIS, HAL/LL (submodules)
-│   └── sifive/      // registers generated from the SVD
-├── build.sh         // build entry point
+├── 📁 core               // Kernel (submodule)
+├── 📁 examples           // Examples and board support, see examples/README.md
+│   ├── common/           // Shared tests and demos
+│   └── boards/           // One directory per board
+├── 📁 emulation          // Renode scripts
+├── 📁 benchmarks         // Benchmarks and FreeRTOS comparison
+├── 📁 vendor/stm32       // CMSIS + HAL/LL
+├── build.sh
 └── CMakeLists.txt
 ```
 
-Each directory has its own README: [examples](examples/README.md) (board directory contract, adding a board), [emulation](emulation/README.md), [benchmarks](benchmarks/README.md), [vendor/sifive](vendor/sifive/README.md).
-
-### Kernel
-
-```text
-core/
-├── kernel.hpp          // kernel umbrella header
-├── shell.hpp           // command line
-├── config.h            // configuration
-├── CMakeLists.txt      // mos::core library
+```
+core
+├── 📁 arch               // Architecture ports
+│   ├── cpu.hpp           // Port contract
+│   ├── cpu_isr.hpp       // Exception entry
+│   ├── cortex_m/         // Cortex-M4/M7
+│   └── riscv32/          // RV32
 │
-├── arch/               // architecture ports
-│   ├── cpu.hpp         // port contract, compile-time check
-│   ├── cpu_isr.hpp     // exception entry dispatch
-│   ├── cortex_m/       // Cortex-M4/M7
-│   └── riscv32/        // RV32 machine mode
+├── 📁 kernel             // Kernel layer
+│   ├── macro.hpp         // Constants
+│   ├── type.hpp          // Basic types
+│   ├── concepts.hpp      // Type constraints
+│   ├── data_type/        // Basic data structures
+│   ├── alloc.hpp         // Memory management
+│   ├── global.hpp/.cpp   // Global variables
+│   ├── task.hpp          // Task management
+│   ├── policy.hpp        // Scheduling policies
+│   ├── scheduler.hpp     // Scheduler
+│   ├── sync.hpp          // Synchronization primitives
+│   ├── ipc.hpp           // Inter-process communication
+│   ├── async.hpp         // Async coroutines
+│   └── utils.hpp         // Other utilities
 │
-├── kernel/
-│   ├── macro.hpp       // constants
-│   ├── type.hpp        // basic types
-│   ├── concepts.hpp    // type constraints
-│   ├── data_type/      // list, bitmap, TCB, page
-│   ├── alloc.hpp       // page allocator
-│   ├── global.hpp/.cpp // global state
-│   ├── task.hpp        // tasks
-│   ├── policy.hpp      // scheduling policies
-│   ├── scheduler.hpp   // scheduler
-│   ├── sync.hpp        // semaphore, mutex, condition variable
-│   ├── ipc.hpp         // message queue
-│   ├── async.hpp       // stackless coroutines
-│   └── utils.hpp       // critical sections, logging
-│
-├── libc/               // printf, newlib stubs
-└── external/etl/       // ETL (submodule)
+├── 📁 libc               // printf, newlib stubs
+├── 📁 external           // ETL
+├── config.h              // System configuration
+├── kernel.hpp            // Kernel modules
+└── shell.hpp             // Command line
 ```
 
 ## Example 🍎
 
-Each board has one standalone program, `examples/boards/<board>/main.cpp`:
-
-| Board | Contents |
-|---|---|
-| F4, H7 | shell, LED, two-machine M2M, kernel tests |
-| HiFive1 | shell, LED, two-machine M2M, scheduling-policy tests (no message-queue or coroutine stress tests) |
+One example per board, `examples/boards/<board>/main.cpp`:
+- Shell + LED + M2M + kernel tests, the same on F4, H7 and RISC-V32 Virtual
 
 ```cpp
 // examples/boards/stm32f4-disco/main.cpp
@@ -233,7 +206,7 @@ int main()
 }
 ```
 
-The board support in `examples/boards/<board>/board.hpp` (header-only) gives every example the same interface:
+Board interface, `board.hpp` (header-only):
 
 ```cpp
 namespace MOS::Boards::STM32F4Disco
@@ -289,30 +262,18 @@ o'' )_____//   Build   @ TIME, DATE
 
 ## Scheduling Policies 🧭
 
-The kernel picks one scheduling policy at compile time (`Kernel::Policy`). All policies share the same context-switch path and add no runtime overhead:
+Chosen at compile time; all share the same context-switch code:
 
-| Policy | Ready-queue key | Preemptive | Notes |
-|---|---|---|---|
-| `RoundRobin` | arrival order | time slice | priority ignored, FIFO rotation |
-| `PreemptPri` | static priority | yes | time-slice rotation within a priority (default) |
-| `RateMonotonic` (RM) | period `T` | yes | shorter period wins; optimal for fixed priority when `D = T` |
-| `DeadlineMonotonic` (DM) | relative deadline `D` | yes | generalizes RM to `D <= T` |
-| `EarliestDeadlineFirst` (EDF) | absolute deadline | yes | optimal for preemptive uniprocessor, schedulable when `ΣC/T <= 1` |
-| `Cooperative` (Coop) | static priority | no | switches only on block or explicit `Task::yield()` |
+| Policy | Full name | Ordering key | Preemptive | Notes |
+|---|---|---|---|---|
+| `RR` | Round-Robin | Arrival order | Time slice | FIFO rotation, priorities ignored |
+| `PP` | Preemptive Priority | Priority | Yes | Equal priorities rotate by time slice (default) |
+| `RM` | Rate-Monotonic | Period `T` | Yes | Shorter period, higher priority |
+| `DM` | Deadline-Monotonic | Relative deadline `D` | Yes | For `D <= T` |
+| `EDF` | Earliest-Deadline-First | Absolute deadline | Yes | Schedulable when `ΣC/T <= 1` |
+| `COOP` | Cooperative | Priority | No | Switches only on block or `yield()` |
 
-Select it in `core/config.h`:
-
-```c
-#define MOS_CONF_SCHED_POLICY EarliestDeadlineFirst
-```
-
-or override it from CMake without touching the source:
-
-```bash
-cmake -S . -B build/stm32f4-disco -DMOS_SCHED_POLICY=EarliestDeadlineFirst
-```
-
-The default remains `PreemptPri`, so existing projects keep their behaviour.
+- Set `MOS_CONF_SCHED_POLICY` in `core/config.h`, or `cmake -DMOS_SCHED_POLICY=EDF`
 
 ### Periodic tasks
 
@@ -335,90 +296,67 @@ Kernel::Task::create_periodic(
 );
 ```
 
-- The first job starts immediately; every `periodic_wait()` wake-up refreshes the absolute deadline as `dl_abs = activation + D`.
-- With a WCET, admission control runs: Liu & Layland bound for RM, density test for DM, `ΣC/T <= 1` for EDF. A rejected task makes `create_periodic` return `nullptr`.
-- Each missed deadline is counted once per job; query it with `Task::missed_deadlines()`. See `examples/common/sched_demo.hpp` for a demo.
+- With a WCET, admission control runs (RM: Liu & Layland, DM: density test, EDF: `ΣC/T <= 1`); on failure it returns `nullptr`
+- Missed deadlines: `Task::missed_deadlines()`; demo in `examples/common/sched_demo.hpp`
 
 ### Behavioral tests
 
-`SchedPolicyTest()` in `examples/common/kernel_tests.hpp` runs automatically in the default build. Batteries are selected at compile time for the active policy and each prints one `[TEST] ... PASS/FAIL` line:
+`examples/common/kernel_tests.hpp`, one `[TEST] ... PASS/FAIL` line per case:
 
 | Case | Policies | Checks |
 |---|---|---|
-| RR fairness | all | equal-priority (equal-deadline) tasks rotate fairly, share spread < 40% |
-| Preemption | PreemptPri/RM/DM | a higher-priority task preempts a busy lower-priority one |
-| Cooperative | Cooperative | the busy task keeps the CPU until it finishes; higher priority waits |
-| Deadline order | RM/DM/EDF | jobs run in T/D/absolute-deadline order (created in reverse); RM/DM also verify derived priorities |
-| Periodic timing | PreemptPri/RM/DM/EDF | activation interval stays near the period; no missed deadline under EDF |
-| Nested PIP | PreemptPri/RM/DM | nested-mutex priority boosts unwind level by level; no medium-priority inversion |
-| PIP multi-waiter | PreemptPri/RM/DM | two waiters boost the owner through one mutex; it drops back to its base priority on unlock |
-| PIP unrelated unlock | PreemptPri/RM/DM | releasing an uncontended mutex keeps the boost owed to another held mutex |
-| PIP transitive | PreemptPri/RM/DM | H waits on M, M waits on L: L inherits H's priority |
-| MsgQueue recheck | all | a sender woken for a free slot that was taken again waits again instead of dropping its message |
-
-Run every policy on every board in Renode:
-
-```bash
-./emulation/selftest.sh                         # 3 boards x 6 policies
-./emulation/selftest.sh stm32f4-disco --policies PreemptPri,EarliestDeadlineFirst
-```
+| RR fairness | all | Equal-priority tasks rotate fairly |
+| Preemption | PP/RM/DM | Higher priority preempts lower |
+| COOP | COOP | A busy task is not preempted |
+| Deadline order | RM/DM/EDF | Runs in T/D/deadline order |
+| Periodic timing | PP/RM/DM/EDF | Activation interval equals the period |
+| Nested PIP | PP/RM/DM | Nested boosts unwind level by level |
+| PIP multi-waiter | PP/RM/DM | Several waiters boost the owner in turn |
+| PIP unrelated unlock | PP/RM/DM | An unrelated unlock keeps the boost |
+| PIP transitive | PP/RM/DM | H waits on M, M on L: L inherits H |
+| MsgQueue recheck | all | Re-waits when the slot is taken, no lost message |
 
 ### Notes
 
-- RM/DM map periods/deadlines onto priorities `[0, 31]` via `floor(log2(T))`; use `>= 32` for ordinary tasks.
-- Under EDF, tasks without a deadline (`Task::create`) rank after periodic ones and rotate by time slice, so they never starve.
-- `Cooperative` has no tick preemption: CPU-bound work must call `Task::yield()` explicitly.
-- Priority inheritance (PIP) is tracked per mutex: nested locks, several waiters on one mutex and transitive chains (H waits on M, M waits on L, so L inherits H) are handled, with no depth limit.
-- Build the policy demo with `-DMOS_SCHED_DEMO=ON` (or `MOS_SCHED_DEMO=ON ./build.sh <board>`). That build skips the `msgq/test` and `async/test` stress tests so they do not exhaust the page pool or flood the UART log.
+- RM/DM map periods/deadlines onto priorities `[0, 31]`; use `>= 32` for ordinary tasks
+- Under EDF, tasks without a deadline run after periodic ones, round-robin
+- `COOP` has no tick preemption; CPU-bound tasks must call `Task::yield()`
+- `-DMOS_SCHED_DEMO=ON` builds the policy demo
 
 ## Porting 🔌
 
-The kernel talks to the CPU only through a fixed set of functions in `MOS::Arch`. The contract is written down in [core/arch/cpu.hpp](core/arch/cpu.hpp), and a port that misses any of it fails to compile:
+The kernel reaches the CPU only through `MOS::Arch`, defined in [core/arch/cpu.hpp](core/arch/cpu.hpp); a port missing any of it fails to compile:
 
-| Function | Cortex-M | RV32 (HiFive1) |
+| Function | Cortex-M | RV32 (RISC-V32 Virtual) |
 |---|---|---|
 | `irq_save/irq_restore/irq_enabled` | PRIMASK | `mstatus.MIE` |
 | `request_switch()` | pend PendSV | write CLINT `msip` (software interrupt) |
 | `start_first()` | `svc 0` | `mret` from the task frame |
 | `init_stack()` | hardware frame + R4–R11 (+EXC_RETURN) | 32-word frame: `mepc`/`ra`/`a0`/`mstatus` |
-| System tick | SysTick → `Scheduler::tick()` | CLINT `mtimecmp` (32768 Hz, remainder carried for an exact 1 kHz average) |
+| System tick | SysTick → `Scheduler::tick()` | CLINT `mtimecmp` (rate set by the board, remainder carried for an exact 1 kHz average) |
 | `idle_wait()` | `wfi` | `wfi` |
 
-Each port has two headers: `port.hpp` (primitives) and `port_isr.hpp` (exception entry and context switch, included at the end of `scheduler.hpp`). Between the context-switch assembly and the kernel there are only three agreements: `cur_tcb`, `next_tcb()` and `MOS_TCB_SP_OFFSET` (offset of the saved SP in the TCB, pinned with a `static_assert`).
-
-To add an architecture, implement both headers in `core/arch/<arch>/`, add a branch to `cpu.hpp`/`cpu_isr.hpp`, then add a board as described in [examples/README.md](examples/README.md). Notes on the RV32 port:
-
-- All traps share one entry. The full integer context is saved on the interrupted task's stack, then the C++ handler runs on the interrupt stack (the reused boot stack). A pending switch is done inside the same trap, without a second trap.
-- External interrupts reach the board's `mos_external_irq(source)` through the PLIC.
-- Boards with little RAM can override `MOS_CONF_POOL_SIZE` and friends from CMake (HiFive1 uses 9 pages and 12 tasks).
-- The benchmark ports are Cortex-M only for now.
+- Each port provides `port.hpp` (primitives) and `port_isr.hpp` (exception entry, context switch)
+- New architecture: implement `core/arch/<arch>/`, add a branch to `cpu.hpp`/`cpu_isr.hpp`, then add a board per [examples/README.md](examples/README.md)
+- RV32: one entry for all traps; external interrupts go through the PLIC to `mos_external_irq()`
 
 ## Milestone 🧾
 
 📦 `v0.5`
 
 > ✅ Done:
->
-> - **Scheduling**
->   - Added `RateMonotonic` / `DeadlineMonotonic` / `EarliestDeadlineFirst` / `Cooperative` policies and completed `RoundRobin`
->   - Added the periodic-task API `Task::create_periodic` / `Task::periodic_wait` with admission control
->   - Shorter scheduler switch path: a yield with a context switch went from 101 to 86 instructions, cooperative scheduling throughput +19%
-> - **Kernel fixes**
->   - Fixed the PendSV-over-SysTick stall, nested priority inheritance and tick-wrap comparisons
->   - Priority inheritance tracked per mutex: fixed unwinding with several waiters on one mutex and on unrelated unlocks; transitive inheritance
->   - `MsgQueue_t` re-checks the queue after waking (no more silently dropped messages); added `IPC::FOREVER` and `send_from_isr/recv_from_isr`
->   - Semaphores hand tokens over directly, so `kill`/`resume` of a waiting task no longer corrupts counts or lists
->   - `CondVar_t::wait` releases and blocks atomically; ISR wake-ups (`up_from_isr`) switch on ISR exit
->   - `IrqGuard_t` saves/restores PRIMASK; TCB no longer packed; idle sleeps with `WFI` when nothing is ready
-> - **Ports**
->   - Architecture layer refactored into the `MOS::Arch` contract (`core/arch/cpu.hpp`); the kernel no longer contains Cortex-M code
->   - Added `STM32H747I-DISCO (Cortex-M7)`, sharing the kernel with F4
->   - Ported to `SiFive HiFive1 (FE310, RV32IMAC)`: passes every scheduling-policy test, with shell and two-machine M2M; registers generated from SiFive's official `design.svd` (`vendor/sifive/`)
-> - **Project and tests**
->   - Each board keeps its example, drivers, build and emulation setup in `examples/boards/<board>/`, discovered by the scripts; core provides the `mos::core` CMake library
->   - STM32 HAL/CMSIS dependencies managed as git submodules
->   - Added `emulation/selftest.sh`, a self-test (3 boards x 6 policies)
->   - Added the Thread-Metric and RTOS-Benchmark suites and a comparison with FreeRTOS (`benchmarks/compare.sh`)
+> - Added `RM` / `DM` / `EDF` / `COOP` policies, completed `RR`
+> - Added periodic tasks `Task::create_periodic` / `Task::periodic_wait` with admission control
+> - Shorter scheduler switch path, yield from 101 to 86 instructions
+> - Fixed the PendSV-over-SysTick stall and tick-wrap comparisons
+> - Priority inheritance tracked per mutex: nested, multiple waiters, transitive
+> - Fixed `MsgQueue_t` lost messages and semaphore counts; atomic `CondVar_t::wait`
+> - Architecture layer refactored into the `MOS::Arch` contract
+> - Added `STM32H747I-DISCO (Cortex-M7)`
+> - Ported to RISC-V: Renode's `RISC-V32 Virtual (RV32IMAC)`
+> - Board directories `examples/boards/<board>/`, discovered by the scripts
+> - Added the `emulation/selftest.sh` self-test
+> - Added Thread-Metric, RTOS-Benchmark and the FreeRTOS comparison
 > - **[Experimental]** Port to `ESP32-C6(RISC-V)`
 > - **[Experimental]** Rewrite it in Rust
 

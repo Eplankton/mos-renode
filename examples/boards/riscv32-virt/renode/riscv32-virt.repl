@@ -1,0 +1,22 @@
+// RISC-V32 Virtual = Renode's riscv_virt + the parts the examples need.
+using "platforms/cpus/riscv_virt.repl"
+
+// The stock CPU type omits Zicsr/Zifencei, which every CSR access needs
+cpu:
+    cpuType: "rv32imac_zicsr_zifencei"
+
+// Second UART for the M1/M2 hub
+uart1: UART.NS16550 @ sysbus 0x10001000
+    IRQ -> plic@4
+
+// GPIO (SiFive model) for the LED and the machine-id strap
+gpio: GPIOPort.SiFive_GPIO @ sysbus 0x10012000
+
+led: Miscellaneous.LED @ gpio 0
+
+gpio:
+    0 -> led@0
+
+// Machine-id strap on GPIO1 (pressed = machine 1)
+idButton: Miscellaneous.Button @ gpio 1
+    -> gpio@1

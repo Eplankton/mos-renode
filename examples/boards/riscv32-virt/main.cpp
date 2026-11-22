@@ -9,7 +9,7 @@
 using namespace MOS;
 using namespace Kernel;
 
-namespace Board = Boards::HiFive1;
+namespace Board = Boards::RiscV32Virt;
 
 static void led_task()
 {
@@ -51,11 +51,17 @@ int main()
 	Task::create(led_task, 1, "led");
 	Task::create(m2m_task, 2, "m2m");
 
-	// 16 KB of RAM: the msgq/async stress tests of the STM32 examples do not
-	// fit, so only the policy battery (or the scheduling demo) runs here.
+	// The scheduling demo replaces the two stress tests: it needs the pages
+	// they would otherwise occupy and its output would drown in the async log.
 #if !defined(MOS_SCHED_DEMO)
+	Task::create(Test::MsgQueueTest<3>, 2, "msgq/test");
+	Task::create(Test::AsyncTest<300>, 2, "async/test");
+
+	// Policy test battery (self-terminating, one verdict line per test)
 	Task::create(Test::SchedPolicyTest, 2, "sched/test");
-#else
+#endif
+
+#if defined(MOS_SCHED_DEMO)
 	Task::create(Test::SchedDemo, 0, "sched/demo");
 #endif
 

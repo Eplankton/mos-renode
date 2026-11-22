@@ -92,7 +92,7 @@ if ((DO_BUILD)); then
         -DMOS_TM_CYCLES=1 \
         -DMOS_RB_ITERATIONS="$ITERATIONS" \
         -DMOS_RB_TIMER_HZ="$BOARD_RB_TIMER_HZ" \
-        -DMOS_SCHED_POLICY=PreemptPri \
+        -DMOS_SCHED_POLICY=PP \
         -DMOS_SCHED_DEMO=OFF >/dev/null
 
     targets=(rtos_benchmark.elf rtos_benchmark_freertos.elf)

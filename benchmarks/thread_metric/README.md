@@ -108,7 +108,8 @@ MOS_THREAD_METRIC=ON MOS_TM_DURATION=30 ./build.sh stm32f4-disco
   entry function; `tm_thread_resume()` posts that semaphore and
   `tm_thread_suspend()` waits on it. This reproduces the
   create-suspended/resume semantics of the reference ports.
-- **Scheduling**: Run the benchmarks with the default `PreemptPri` policy.
+- **Scheduling**: Run the benchmarks with the default `PP` (preemptive
+  priority) policy.
   A cooperative or non-preemptive policy does not satisfy the assumptions of
   the preemptive and interrupt-preemption tests.
 - **Interrupts**: `tm_cause_interrupt()` pends `EXTI0_IRQn` in the NVIC and
@@ -137,7 +138,7 @@ MOS_THREAD_METRIC=ON MOS_TM_DURATION=30 ./build.sh stm32f4-disco
 
 ## Sample Renode results
 
-Renode 1.17.0, `-Os`, 5-second interval, one report, default `PreemptPri`
+Renode 1.17.0, `-Os`, 5-second interval, one report, default `PP`
 policy. These numbers are useful for relative comparisons on the same setup;
 they are not calibrated hardware measurements.
 

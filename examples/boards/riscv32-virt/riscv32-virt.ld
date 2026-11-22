@@ -1,8 +1,8 @@
 /*
- * SiFive HiFive1 (FE310): 16 MB QSPI flash with user code at 0x20400000
- * (after the bootloader), 16 KB DTIM RAM at 0x80000000.
+ * Renode RISC-V32 Virtual: the image is loaded into RAM at 0x80000000
+ * (riscv_virt models 2 GB; 256 KB is used).
  *
- * RAM: .data | .bss | heap -> ... <- boot/interrupt stack (__stack_top)
+ * RAM: code | .data | .bss | heap -> ... <- boot/interrupt stack (__stack_top)
  */
 
 OUTPUT_ARCH("riscv")
@@ -10,11 +10,10 @@ ENTRY(_start)
 
 MEMORY
 {
-    flash (rx)  : ORIGIN = 0x20400000, LENGTH = 12M
-    ram   (rwx) : ORIGIN = 0x80000000, LENGTH = 16K
+    ram (rwx) : ORIGIN = 0x80000000, LENGTH = 256K
 }
 
-/* Explicit segment permissions: flash is R+X, RAM is R+W. */
+/* Separate segments keep code R+X and data R+W. */
 PHDRS
 {
     text PT_LOAD FLAGS(5); /* R X */
@@ -23,25 +22,25 @@ PHDRS
 }
 
 /* Boot stack, reused as the interrupt stack once the scheduler runs. */
-__stack_size = 1K;
+__stack_size = 2K;
 
 SECTIONS
 {
-    .init : { KEEP(*(.init)) } >flash :text
+    .init : { KEEP(*(.init)) } >ram :text
 
     .text :
     {
         *(.text .text.*)
         *(.rodata .rodata.*)
         . = ALIGN(4);
-    } >flash :text
+    } >ram :text
 
     .preinit_array :
     {
         PROVIDE_HIDDEN(__preinit_array_start = .);
         KEEP(*(.preinit_array))
         PROVIDE_HIDDEN(__preinit_array_end = .);
-    } >flash :text
+    } >ram :text
 
     .init_array :
     {
@@ -49,7 +48,7 @@ SECTIONS
         KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
         KEEP(*(.init_array .ctors))
         PROVIDE_HIDDEN(__init_array_end = .);
-    } >flash :text
+    } >ram :text
 
     .fini_array :
     {
@@ -57,9 +56,9 @@ SECTIONS
         KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
         KEEP(*(.fini_array .dtors))
         PROVIDE_HIDDEN(__fini_array_end = .);
-    } >flash :text
+    } >ram :text
 
-    .eh_frame : { KEEP(*(.eh_frame)) } >flash :text
+    .eh_frame : { KEEP(*(.eh_frame)) } >ram :text
 
     .data : ALIGN(8)
     {
@@ -72,9 +71,7 @@ SECTIONS
         *(.sdata .sdata.*)
         . = ALIGN(4);
         __data_end = .;
-    } >ram AT>flash :data
-
-    __data_load = LOADADDR(.data);
+    } >ram :data
 
     .bss (NOLOAD) : ALIGN(8)
     {
@@ -93,5 +90,5 @@ SECTIONS
     __stack_top = ORIGIN(ram) + LENGTH(ram);
     __heap_end  = __stack_top - __stack_size; /* _sbrk() refuses to grow past it */
 
-    ASSERT(_end <= __stack_top - __stack_size, "RAM overflow: .data + .bss collide with the stack")
+    ASSERT(_end <= __stack_top - __stack_size, "RAM overflow: code + .data + .bss collide with the stack")
 }

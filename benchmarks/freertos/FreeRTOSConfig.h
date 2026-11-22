@@ -2,7 +2,7 @@
  * (STM32F407, Cortex-M4F, ARM_CM4F port).
  *
  * Chosen to match the MOS benchmark builds: 16 MHz HSI core clock, 1 kHz
- * tick, preemptive priority scheduling with time slicing (MOS PreemptPri),
+ * tick, preemptive priority scheduling with time slicing (MOS PP),
  * mutexes with priority inheritance, recursive mutexes, counting semaphores.
  * Assertions follow MOS (MOS_CONF_ASSERT, see MOS_BENCH_ASSERT). Features
  * MOS does not have or the benchmarks do not use (software timers, trace,

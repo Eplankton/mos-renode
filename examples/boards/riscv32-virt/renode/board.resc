@@ -1,0 +1,13 @@
+# RISC-V32 Virtual (riscv_virt, RV32IMAC): machine setup shared by debug.resc,
+# multi_mach.resc and emulation/selftest.sh. Expects $bin_path.
+
+machine LoadPlatformDescription $ORIGIN/riscv32-virt.repl
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+    cpu PC `sysbus GetSymbolAddress "_start"`
+"""
+runMacro $reset
+
+logLevel -1 gpio.led

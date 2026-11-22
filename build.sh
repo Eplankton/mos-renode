@@ -42,8 +42,7 @@ Usage:
   ./build.sh clean              remove build/
 
 Environment (optional):
-  MOS_SCHED_POLICY=RoundRobin|PreemptPri|RateMonotonic|
-                   DeadlineMonotonic|EarliestDeadlineFirst|Cooperative
+  MOS_SCHED_POLICY=RR|PP|RM|DM|EDF|COOP
   MOS_SCHED_DEMO=ON             build the periodic scheduling demo
   MOS_THREAD_METRIC=ON          build the Thread-Metric benchmark firmware
   MOS_TM_DURATION=5             Thread-Metric reporting interval (seconds)
@@ -81,7 +80,7 @@ build_board() {
     log_info "Configuring ${board}..."
     # Always pass the scheduler options explicitly so a stale CMake cache
     # from an experiment cannot silently change the default firmware.
-    #   MOS_SCHED_POLICY=EarliestDeadlineFirst MOS_SCHED_DEMO=ON ./build.sh ...
+    #   MOS_SCHED_POLICY=EDF MOS_SCHED_DEMO=ON ./build.sh ...
     cmake -S . -B "$build_dir" \
         -DMOS_BOARD="$board" \
         -DMOS_SCHED_POLICY="${MOS_SCHED_POLICY:-}" \

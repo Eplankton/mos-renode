@@ -1,9 +1,9 @@
-:name: HiFive1 Multiple Machines
+:name: RISC-V32 Virtual Multiple Machines
 :description: M1 and M2 connected via a UART hub (UART1), Shell on UART0
 
 # Run from the repository root:
-#   renode --console examples/boards/hifive1/renode/multi_mach.resc
-$bin_path?=$CWD/build/hifive1/hifive1.elf
+#   renode --console examples/boards/riscv32-virt/renode/multi_mach.resc
+$bin_path?=$CWD/build/riscv32-virt/riscv32-virt.elf
 
 $name1?="M1"
 $name2?="M2"
@@ -14,12 +14,11 @@ emulation CreateUARTHub "uart_hub"
 mach create $name1
 include $ORIGIN/board.resc
 # Renode's SiFive_GPIO latches an external level only on pins whose
-# input_en AND output_en bits are already set (silicon only needs input_en).
-# Set both for the id strap (GPIO9) before pressing; the firmware's GPIO
-# init uses read-modify-write and keeps them.
-sysbus WriteDoubleWord 0x10012004 0x200
-sysbus WriteDoubleWord 0x10012008 0x200
-gpioInputs.idButton Press
+# input_en AND output_en bits are already set. Set both for the id strap
+# (GPIO1) before pressing; the firmware's GPIO init keeps them.
+sysbus WriteDoubleWord 0x10012004 0x2
+sysbus WriteDoubleWord 0x10012008 0x2
+gpio.idButton Press
 machine StartGdbServer 1234
 
 emulation CreateServerSocketTerminal 3333 "uart-con1" false

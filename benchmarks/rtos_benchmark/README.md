@@ -130,7 +130,7 @@ MOS_RTOS_BENCHMARK=ON MOS_RB_ITERATIONS=10000 ./build.sh stm32f4-disco
 
 ## Sample Renode results
 
-Renode 1.17.0, `-Os`, 1000 iterations, default `PreemptPri` policy. Values are
+Renode 1.17.0, `-Os`, 1000 iterations, default `PP` (preemptive priority) policy. Values are
 average latency in nanoseconds, converted with the clock the Renode model
 actually drives (`--timer-hz`: 10 MHz TIM2 on STM32F4, 250 MHz DWT on
 STM32H7).
