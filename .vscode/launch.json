@@ -42,6 +42,27 @@
                     "file": "${workspaceRoot}/build/stm32h7-disco/stm32h7-disco.elf"
                 }
             ]
+        },
+        {
+            "name": "RISC-V Debug (HiFive1)",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceRoot}/build/hifive1/hifive1.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "external",
+            "gdbTarget": "localhost:1234",
+            "gdbPath": "${workspaceRoot}/emulation/riscv-gdb.sh",
+            "preLaunchTask": "Run Renode (HiFive1)",
+            "postDebugTask": "Close Renode",
+            "runToEntryPoint": "main",
+            "loadFiles": [
+                "${workspaceRoot}/build/hifive1/hifive1.elf"
+            ],
+            "symbolFiles": [
+                {
+                    "file": "${workspaceRoot}/build/hifive1/hifive1.elf"
+                }
+            ]
         }
     ]
 }

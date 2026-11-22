@@ -1,0 +1,20 @@
+:name: stm32h7-disco
+:description: MOS RTOS on STM32H747I-DISCO (Cortex-M7)
+
+# Run from the repository root:
+#   renode --console examples/boards/stm32h7-disco/renode/debug.resc
+# Then use VS Code F5 or connect GDB to localhost:1234.
+$name?="stm32h7-disco"
+$bin_path?=$CWD/build/stm32h7-disco/stm32h7-disco.elf
+
+mach create $name
+include $ORIGIN/board.resc
+
+machine StartGdbServer 1234
+
+# Shell UART (USART1) -> TCP 3333
+emulation CreateServerSocketTerminal 3333 "uart-con" false
+connector Connect sysbus.usart1 uart-con
+
+# Readiness marker used by emulation/run.sh
+echo "MOS_RENODE_READY"

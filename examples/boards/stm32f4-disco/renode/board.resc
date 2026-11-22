@@ -1,0 +1,16 @@
+# STM32F4 Discovery (Cortex-M4): machine setup shared by debug.resc, multi_mach.resc,
+# emulation/selftest.sh and the benchmark runners. Expects $bin_path.
+
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+machine LoadPlatformDescription $ORIGIN/add_on.repl
+
+# The F4 BSP runs from the reset HSI clock (16 MHz).
+sysbus.nvic Frequency 16000000
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+"""
+runMacro $reset
+
+logLevel -1 gpioPortA.myLED

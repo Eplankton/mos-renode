@@ -2,12 +2,13 @@
 #define _MOS_BOARD_STM32F4_DISCO_
 
 #include "stm32f4xx_hal.h"
-#include "../common/uart.hpp"
+#include "uart.hpp"
+#include "stm32_usart.hpp"
 
 namespace MOS::Boards::STM32F4Disco
 {
-	using Stdio = Common::SyncUart<MOS_CONF_SHELL_BUF_SIZE>;
-	using Hub   = Common::SyncUart<32>;
+	using Stdio = Drivers::SyncUart<Drivers::Stm32Usart, MOS_CONF_SHELL_BUF_SIZE>;
+	using Hub   = Drivers::SyncUart<Drivers::Stm32Usart, 32>;
 
 	namespace Detail
 	{
@@ -87,8 +88,8 @@ namespace MOS::Boards::STM32F4Disco
 			usart_init(USART3, pclk1, HUB_BAUD);
 		}
 
-		inline Stdio stdio_instance {USART2};
-		inline Hub hub_instance {USART3};
+		inline Stdio stdio_instance {Drivers::Stm32Usart {USART2}};
+		inline Hub hub_instance {Drivers::Stm32Usart {USART3}};
 	}
 
 	inline void init()
@@ -117,9 +118,7 @@ namespace MOS::Boards::STM32F4Disco
 
 extern "C" MOS_USED inline void MOS_PUTCHAR(char ch)
 {
-	auto tx = MOS::Boards::STM32F4Disco::stdio().tx;
-	while (!LL_USART_IsActiveFlag_TXE(tx));
-	LL_USART_TransmitData8(tx, ch);
+	MOS::Boards::STM32F4Disco::stdio().port.write(ch);
 }
 
 extern "C" MOS_USED inline void USART2_IRQHandler()

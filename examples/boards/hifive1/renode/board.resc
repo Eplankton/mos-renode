@@ -1,0 +1,20 @@
+# SiFive HiFive1 (FE310, RV32IMAC): machine setup shared by debug.resc,
+# multi_mach.resc and emulation/selftest.sh. Expects $bin_path.
+
+machine LoadPlatformDescription $ORIGIN/hifive1.repl
+
+# The PRCI clock block is not modeled: report the crystal/PLL as ready.
+sysbus Tag <0x10008004 4> "PRCI_HFXOSCCFG" 0xFFFFFFFF
+sysbus Tag <0x10008008 4> "PRCI_PLLCFG" 0xFFFFFFFF
+
+# The BSP runs the core from the 16 MHz HFXOSC
+cpu PerformanceInMips 16
+
+macro reset
+"""
+    sysbus LoadELF $bin_path
+    cpu PC `sysbus GetSymbolAddress "_start"`
+"""
+runMacro $reset
+
+logLevel -1 gpioInputs.greenLED

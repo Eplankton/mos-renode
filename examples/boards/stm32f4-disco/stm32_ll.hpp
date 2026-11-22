@@ -1,5 +1,5 @@
-#ifndef _MOS_COMMON_PLATFORM_
-#define _MOS_COMMON_PLATFORM_
+#ifndef _MOS_DRIVERS_STM32_LL_
+#define _MOS_DRIVERS_STM32_LL_
 
 // MOS_DEVICE_HEADER is supplied by CMake, e.g. "stm32f4xx.h" or "stm32h747xx.h".
 #include MOS_DEVICE_HEADER

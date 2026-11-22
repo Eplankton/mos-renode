@@ -8,133 +8,140 @@
 # Non-interactive:
 #   ./emulation/run.sh stm32f4-disco demo
 #   ./emulation/run.sh stm32h7-disco debug
-#   ./emulation/run.sh stm32f4-disco multi
-#   ./emulation/run.sh stm32h7-disco multi-debug
+#   ./emulation/run.sh hifive1 multi
+#   ./emulation/run.sh stm32f4-disco multi-debug
+#   ./emulation/run.sh <board> <mode> --no-build
 #
 # Modes:
 #   demo        build, run, attach a UART console (single machine)
 #   debug       build, start Renode + GDB server (single machine)
 #   multi       build, run M1/M2 and multiplex both UART consoles
 #   multi-debug build, start M1/M2 with GDB servers (1234/1235)
+#
+# Boards are the directories under examples/boards/; each provides renode/debug.resc
+# and renode/multi_mach.resc.
 # ==============================================================================
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+source "$ROOT/emulation/renode.sh"
 
 BOARD=""
 MODE=""
 NO_BUILD=0
+MODES=(demo debug multi multi-debug)
+declare -A MODE_DESC=(
+    [demo]="Demo: single machine + UART console"
+    [debug]="Debug: single machine + GDB server (1234)"
+    [multi]="Demo: dual-machine M2M + UART multiplexer"
+    [multi-debug]="Debug: dual-machine M2M (GDB 1234/1235)"
+)
+mapfile -t BOARDS < <(mos_boards)
 
 usage() {
     cat <<'EOF'
 Usage:
-  ./emulation/run.sh                 interactive board + mode selection
-  ./emulation/run.sh stm32f4-disco demo        single machine + UART console
-  ./emulation/run.sh stm32h7-disco debug     single machine + GDB server
-  ./emulation/run.sh stm32f4-disco multi       dual-machine M2M + UART multiplexer
-  ./emulation/run.sh stm32h7-disco multi-debug  dual-machine M2M + GDB 1234/1235
-  ./emulation/run.sh <board> <mode> --no-build
+  ./emulation/run.sh                              interactive board + mode selection
+  ./emulation/run.sh stm32f4-disco demo           single machine + UART console
+  ./emulation/run.sh stm32h7-disco debug          single machine + GDB server
+  ./emulation/run.sh hifive1 multi                dual-machine M2M + UART multiplexer
+  ./emulation/run.sh stm32f4-disco multi-debug    dual-machine M2M + GDB 1234/1235
+  ./emulation/run.sh <board> <mode> --no-build    skip the build step
 
 Boards:
-  stm32f4-disco    STM32F4 Discovery (Cortex-M4)
-  stm32h7-disco  STM32H747I-DISCO (Cortex-M7)
-
-Modes:
-  demo         build, run, attach a UART console (single machine)
-  debug        build, start Renode + GDB server (single machine)
-  multi        build, run M1/M2 and multiplex both UART consoles
-  multi-debug  build, start M1/M2 with GDB servers (1234/1235)
 EOF
+    local b m
+    for b in "${BOARDS[@]}"; do
+        mos_load_board "$b"
+        printf '  %-16s %s\n' "$b" "$BOARD_TITLE"
+    done
+    echo
+    echo "Modes:"
+    for m in "${MODES[@]}"; do
+        printf '  %-16s %s\n' "$m" "${MODE_DESC[$m]}"
+    done
 }
 
 while (($#)); do
     case "$1" in
-        stm32f4-disco) BOARD=stm32f4-disco ;;
-        stm32h7-disco) BOARD=stm32h7-disco ;;
         demo|debug|multi|multi-debug) MODE="$1" ;;
         --no-build) NO_BUILD=1 ;;
         -h|--help) usage; exit 0 ;;
         *)
-            echo "Unknown argument: $1" >&2
-            usage >&2
-            exit 1
+            if mos_is_board "$1"; then
+                BOARD="$1"
+            else
+                echo "Unknown argument: $1" >&2
+                usage >&2
+                exit 1
+            fi
             ;;
     esac
     shift
 done
 
+# pick <prompt> <value>... : numbered menu showing each value's label
+# (from LABELS[value]), prints the chosen value
+pick() {
+    local prompt="$1"; shift
+    local opts=("$@") i choice
+    echo "$prompt" >&2
+    while true; do
+        for i in "${!opts[@]}"; do
+            printf '  %d) %s\n' $((i + 1)) "${LABELS[${opts[$i]}]}" >&2
+        done
+        read -r -p "> " choice || exit 1
+        if [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= ${#opts[@]})); then
+            echo "${opts[$((choice - 1))]}"
+            return
+        fi
+        echo "Invalid selection" >&2
+    done
+}
+
+declare -A LABELS=()
+
 if [[ -z "$BOARD" ]]; then
     if [[ ! -t 0 ]]; then
-        echo "[error] no board selected (use stm32f4-disco / stm32h7-disco)" >&2
+        echo "[error] no board selected ($(mos_boards | tr '\n' ' '))" >&2
         exit 1
     fi
-    echo "Select board:"
-    while true; do
-        printf '%s\n' \
-            "  1) STM32F4 Discovery (Cortex-M4)" \
-            "  2) STM32H747I-DISCO (Cortex-M7)"
-        read -r -p "> " choice || exit 1
-        case "$choice" in
-            1) BOARD=stm32f4-disco; break ;;
-            2) BOARD=stm32h7-disco; break ;;
-            *) echo "Invalid selection" ;;
-        esac
+    for b in "${BOARDS[@]}"; do
+        mos_load_board "$b"
+        LABELS[$b]="$BOARD_TITLE"
     done
+    BOARD="$(pick "Select board:" "${BOARDS[@]}")"
 fi
 
 if [[ -z "$MODE" ]]; then
     if [[ ! -t 0 ]]; then
-        echo "[error] no mode selected (use demo / debug / multi / multi-debug)" >&2
+        echo "[error] no mode selected (use ${MODES[*]})" >&2
         exit 1
     fi
-    echo "Select mode:"
-    while true; do
-        printf '%s\n' \
-            "  1) Demo: single machine + UART console" \
-            "  2) Debug: single machine + GDB server" \
-            "  3) Demo: dual-machine M2M" \
-            "  4) Debug: dual-machine M2M (GDB 1234/1235)"
-        read -r -p "> " choice || exit 1
-        case "$choice" in
-            1) MODE=demo; break ;;
-            2) MODE=debug; break ;;
-            3) MODE=multi; break ;;
-            4) MODE=multi-debug; break ;;
-            *) echo "Invalid selection" ;;
-        esac
+    for m in "${MODES[@]}"; do
+        LABELS[$m]="${MODE_DESC[$m]}"
     done
+    MODE="$(pick "Select mode:" "${MODES[@]}")"
 fi
 
-case "$BOARD" in
-    stm32f4-disco)
-        BUILD_TARGET=stm32f4-disco
-        BOARD_NAME="STM32F4-Discovery"
-        ELF="build/stm32f4-disco/stm32f4-disco.elf"
-        RESC_DIR="emulation/stm32f4-disco"
-        ;;
-    stm32h7-disco)
-        BUILD_TARGET=stm32h7-disco
-        BOARD_NAME="STM32H747I-DISCO"
-        ELF="build/stm32h7-disco/stm32h7-disco.elf"
-        RESC_DIR="emulation/stm32h7-disco"
-        ;;
-    *)
-        echo "Unsupported board: $BOARD" >&2
-        exit 1
-        ;;
-esac
+mos_load_board "$BOARD"
+BOARD_NAME="$BOARD_TITLE"
+ELF="build/$BOARD/$BOARD.elf"
 
 if [[ "$MODE" == multi* ]]; then
-    RESC="$RESC_DIR/multi_mach.resc"
+    RESC="$BOARD_RESC_DIR/multi_mach.resc"
 else
-    RESC="$RESC_DIR/debug.resc"
+    RESC="$BOARD_RESC_DIR/debug.resc"
 fi
+
+# GDB matching the board's architecture (PATH or ~/.local/xpacks)
+GDB="$(mos_find_tool "$BOARD_GDB" || echo "$BOARD_GDB")"
 
 if [[ "$NO_BUILD" -eq 0 ]]; then
     echo "[build] $BOARD_NAME"
-    "$ROOT/build.sh" "$BUILD_TARGET"
+    "$ROOT/build.sh" "$BOARD"
 else
     echo "[build] skipped (--no-build)"
 fi
@@ -232,7 +239,7 @@ fi
 
 start_gdb() {
     local port="$1"
-    $SETSID arm-none-eabi-gdb -q -batch "$ELF" \
+    $SETSID "$GDB" -q -batch "$ELF" \
         -ex "set confirm off" \
         -ex "target remote 127.0.0.1:$port" \
         -ex "load" \
@@ -254,7 +261,7 @@ case "$MODE" in
         echo "Renode is running."
         echo "  GDB : localhost:1234"
         echo "  UART: localhost:3333 (telnet)"
-        echo "Use VS Code F5, or: arm-none-eabi-gdb $ELF"
+        echo "Use VS Code F5, or: $(basename "$GDB") $ELF"
         echo "Press Ctrl-C to stop."
         wait "$RENODE_PID"
         ;;
@@ -262,14 +269,14 @@ case "$MODE" in
         echo "Renode is running (M1/M2)."
         echo "  GDB : localhost:1234 (M1), localhost:1235 (M2)"
         echo "  UART: localhost:3333 (M1), localhost:3334 (M2)"
-        echo "  M1: arm-none-eabi-gdb $ELF -ex 'target remote :1234'"
-        echo "  M2: arm-none-eabi-gdb $ELF -ex 'target remote :1235'"
+        echo "  M1: $(basename "$GDB") $ELF -ex 'target remote :1234'"
+        echo "  M2: $(basename "$GDB") $ELF -ex 'target remote :1235'"
         echo "Press Ctrl-C to stop."
         wait "$RENODE_PID"
         ;;
     demo)
-        if ! command -v arm-none-eabi-gdb >/dev/null 2>&1; then
-            echo "[error] arm-none-eabi-gdb not found" >&2
+        if ! command -v "$GDB" >/dev/null 2>&1; then
+            echo "[error] $GDB not found" >&2
             exit 1
         fi
         start_gdb 1234
@@ -277,8 +284,8 @@ case "$MODE" in
         run_console --port 3333
         ;;
     multi)
-        if ! command -v arm-none-eabi-gdb >/dev/null 2>&1; then
-            echo "[error] arm-none-eabi-gdb not found" >&2
+        if ! command -v "$GDB" >/dev/null 2>&1; then
+            echo "[error] $GDB not found" >&2
             exit 1
         fi
         start_gdb 1234

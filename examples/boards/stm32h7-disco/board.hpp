@@ -1,12 +1,13 @@
 #ifndef _MOS_BOARD_STM32H747_DISCO_
 #define _MOS_BOARD_STM32H747_DISCO_
 
-#include "../common/uart.hpp"
+#include "uart.hpp"
+#include "stm32_usart.hpp"
 
 namespace MOS::Boards::STM32H747Disco
 {
-	using Stdio = Common::SyncUart<MOS_CONF_SHELL_BUF_SIZE>;
-	using Hub   = Common::SyncUart<32>;
+	using Stdio = Drivers::SyncUart<Drivers::Stm32Usart, MOS_CONF_SHELL_BUF_SIZE>;
+	using Hub   = Drivers::SyncUart<Drivers::Stm32Usart, 32>;
 
 	namespace Detail
 	{
@@ -97,8 +98,8 @@ namespace MOS::Boards::STM32H747Disco
 			usart_init(USART6, pclk2, HUB_BAUD);
 		}
 
-		inline Stdio stdio_instance {USART1};
-		inline Hub hub_instance {USART6};
+		inline Stdio stdio_instance {Drivers::Stm32Usart {USART1}};
+		inline Hub hub_instance {Drivers::Stm32Usart {USART6}};
 	}
 
 	inline void init()
@@ -127,9 +128,7 @@ namespace MOS::Boards::STM32H747Disco
 
 extern "C" MOS_USED inline void MOS_PUTCHAR(char ch)
 {
-	auto tx = MOS::Boards::STM32H747Disco::stdio().tx;
-	while (!LL_USART_IsActiveFlag_TXE(tx));
-	LL_USART_TransmitData8(tx, ch);
+	MOS::Boards::STM32H747Disco::stdio().port.write(ch);
 }
 
 extern "C" MOS_USED inline void USART1_IRQHandler()

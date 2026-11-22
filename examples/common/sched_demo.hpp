@@ -1,9 +1,9 @@
-#ifndef _MOS_SCHED_TEST_
-#define _MOS_SCHED_TEST_
+#ifndef _MOS_TESTS_SCHED_DEMO_
+#define _MOS_TESTS_SCHED_DEMO_
 
 #include "kernel.hpp"
 
-namespace MOS::Examples::Test
+namespace MOS::Test
 {
 	using namespace Kernel;
 
@@ -47,7 +47,7 @@ namespace MOS::Examples::Test
 		}
 	}
 
-	inline void SchedTest()
+	inline void SchedDemo()
 	{
 		LOG("=== Scheduling policy: %s ===", policy_name(DEFAULT_POLICY));
 
@@ -61,7 +61,7 @@ namespace MOS::Examples::Test
 		    periodic_job<800, 10>, nullptr, 0, 800_ms, 800_ms, "rt/800", 10_ms
 		);
 
-		Task::create(sched_monitor, nullptr, 1, "sched/mon");
+		Task::create(sched_monitor, 1, "sched/mon");
 	}
 }
 

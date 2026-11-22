@@ -1,129 +1,13 @@
-#ifndef _MOS_COMMON_TESTS_
-#define _MOS_COMMON_TESTS_
+#ifndef _MOS_TESTS_KERNEL_
+#define _MOS_TESTS_KERNEL_
 
 #include "kernel.hpp"
 #include <cstdint>
 
-namespace MOS::Examples::Test
+namespace MOS::Test
 {
 	using namespace Kernel;
 	using namespace Utils;
-
-	void MutexTest(size_t scale)
-	{
-		// ==========================================
-		// 1. PIP Test (L/M/H Inversion Scenario)
-		// ==========================================
-		static auto pip_test = [] {
-			static Sync::Mutex_t mutex;
-
-			static const auto PRI_H = 1;
-			static const auto PRI_M = 2;
-			static const auto PRI_L = 3;
-
-			kprintf("\n=== [Test 1] PIP Inversion Test (L/M/H) ===\n");
-			kprintf("Expect: L(P%d) locks -> H(P%d) runs & boosts L -> M(P%d) cannot preempt L\n", PRI_L, PRI_H, PRI_M);
-
-			// --- Low Priority Task ---
-			auto task_l = [] {
-				mutex.hold([] {
-					kprintf("[L] Locked. Pri=%d. Busy Waiting 500ms for H/M...\n", Task::current()->get_pri());
-
-					// Busy waiting: hog CPU to test if H can preempt
-					auto start = Kernel::Global::os_ticks;
-					while (Kernel::Global::os_ticks < start + 500_ms) {
-						MOS_NOP();
-					}
-
-					kprintf("[L] Resumed. Checking PIP status...\n");
-					auto cur = Task::current();
-
-					// Check Point: H should have run and boosted priority
-					if (cur->get_pri() <= PRI_H) {
-						kprintf("[L] PASS: Priority Boosted to %d (Matched H)\n", cur->get_pri());
-					}
-					else {
-						kprintf("[L] FAIL: Priority is %d. (H didn't run)\n", cur->get_pri());
-					}
-
-					kprintf("[L] Working (M should NOT preempt)...\n");
-					for (int i = 0; i < 3; i++) {
-						Utils::delay(100_ms);
-					}
-					kprintf("[L] Unlock\n");
-				});
-				kprintf("[L] Finished. Pri restored to %d\n", Task::current()->get_pri());
-			};
-
-			// --- High Priority Task ---
-			auto task_h = [] {
-				Task::delay(100_ms); // Let L run first
-
-				// If this line is not printed, preemption failed
-				kprintf("[H] Started! Trying to lock (Should boost L)...\n");
-
-				mutex.hold([] {
-					kprintf("[H] Get Lock!\n");
-				});
-
-				kprintf("[H] Finished\n");
-			};
-
-			// --- Medium Priority Task ---
-			auto task_m = [] {
-				Task::delay(200_ms);
-				kprintf("[M] Started.\n"); // If this line prints before L Unlock, PIP failed
-				kprintf("[M] Done! (Should be LAST)\n");
-			};
-
-			Task::create(task_h, nullptr, PRI_H, "mtx/H");
-			Task::create(task_m, nullptr, PRI_M, "mtx/M");
-			Task::create(task_l, nullptr, PRI_L, "mtx/L");
-		};
-
-		Task::create(pip_test, 0, Macro::PRI_MIN, "pip_root");
-
-		// // ==========================================
-		// // 2. Stress Test
-		// // ==========================================
-		// static auto stress_test = [] {
-		// 	kprintf("\n=== [Test 2] Concurrency Stress Test ===\n");
-
-		// 	static Sync::Mutex_t stress_mtx;
-		// 	static volatile int cnt = 0;
-		// 	const int TASKS_NUM     = 4;
-		// 	const int INC_PER_TASK  = 1000;
-
-		// 	static auto worker = [](int count) {
-		// 		for (int i = 0; i < count; i++) {
-		// 			stress_mtx.hold([&] {
-		// 				volatile int temp = cnt;
-		// 				cnt               = temp + 1;
-		// 			});
-		// 			if (i % 100 == 0) Task::yield(); // Rapid Shuffle
-		// 		}
-		// 	};
-
-		// 	for (int i = 0; i < TASKS_NUM; i++) {
-		// 		Task::create(worker, INC_PER_TASK, 2, "worker");
-		// 	}
-
-		// 	// Wait until all done
-		// 	Task::delay(1000_ms);
-
-		// 	kprintf("Expect: %d\n", TASKS_NUM * INC_PER_TASK);
-		// 	kprintf("Actual: %d\n", cnt);
-
-		// 	if (cnt == TASKS_NUM * INC_PER_TASK) {
-		// 		kprintf("[PASS] Done.\n");
-		// 	}
-		// 	else {
-		// 		kprintf("[FAIL] Race Condition Detected!\n");
-		// 	}
-		// };
-
-		// Task::create(stress_test, scale, Macro::PRI_MAX, "mtx/test");
-	}
 
 	template <size_t NUM>
 	void MsgQueueTest()
@@ -158,7 +42,7 @@ namespace MOS::Examples::Test
 			}
 		};
 
-		Task::create(launch, nullptr, Macro::PRI_MAX, "msg_q/test");
+		Task::create(launch, Macro::PRI_MAX, "msg_q/test");
 	}
 
 	template <size_t NUM>
@@ -259,8 +143,8 @@ namespace MOS::Examples::Test
 			high_ran = Global::os_ticks;
 		};
 
-		auto low = Task::create(low_task, nullptr, 10, "pre/low");
-		Task::create(high_task, nullptr, 1, "pre/high");
+		auto low = Task::create(low_task, 10, "pre/low");
+		Task::create(high_task, 1, "pre/high");
 
 		const auto end = Global::os_ticks + 500_ms;
 		while (high_ran == 0 && (int32_t) (Global::os_ticks - end) < 0) {
@@ -296,8 +180,8 @@ namespace MOS::Examples::Test
 			high_ran = Global::os_ticks;
 		};
 
-		Task::create(med_task, nullptr, 10, "coo/med");
-		Task::create(high_task, nullptr, 1, "coo/high");
+		Task::create(med_task, 10, "coo/med");
+		Task::create(high_task, 1, "coo/high");
 
 		const auto end = Global::os_ticks + 600_ms;
 		while (high_ran == 0 && (int32_t) (Global::os_ticks - end) < 0) {
@@ -447,10 +331,10 @@ namespace MOS::Examples::Test
 			med_ran = Global::os_ticks;
 		};
 
-		Task::create(low_task, nullptr, P_L, "pip/low");
-		Task::create(med_task, nullptr, P_M, "pip/med");
-		Task::create(ha_task, nullptr, P_HA, "pip/ha");
-		Task::create(hb_task, nullptr, P_HB, "pip/hb");
+		Task::create(low_task, P_L, "pip/low");
+		Task::create(med_task, P_M, "pip/med");
+		Task::create(ha_task, P_HA, "pip/ha");
+		Task::create(hb_task, P_HB, "pip/hb");
 
 		const auto end = Global::os_ticks + 1500_ms;
 		while (low_done == 0 && (int32_t) (Global::os_ticks - end) < 0) {
@@ -472,6 +356,172 @@ namespace MOS::Examples::Test
 		);
 	}
 
+	// Spin until `ticks` have elapsed (keeps the CPU, unlike Task::delay).
+	inline void busy_for(Task::Tick_t ticks)
+	{
+		const auto end = Global::os_ticks + ticks;
+		while ((int32_t) (Global::os_ticks - end) < 0) MOS_NOP();
+	}
+
+	// Wait (sleeping) until `flag` is set or `ticks` elapse.
+	inline void wait_flag(volatile Task::Tick_t& flag, Task::Tick_t ticks)
+	{
+		const auto end = Global::os_ticks + ticks;
+		while (flag == 0 && (int32_t) (Global::os_ticks - end) < 0) {
+			Task::delay(10_ms);
+		}
+	}
+
+	// PIP: two waiters boost the owner through the SAME mutex. After the
+	// unlock the owner must drop all the way back to its base priority.
+	inline void pip_multi_waiter_test()
+	{
+		constexpr Task::Prior_t P_H2 = 2, P_H1 = 5, P_L = 10;
+
+		static Sync::Mutex_t mtx;
+		static volatile Task::Tick_t low_done = 0;
+		static volatile Task::Prior_t peak = 0, after = 0;
+
+		auto low_task = [] {
+			mtx.hold([] {
+				busy_for(120_ms);
+				peak = Task::current()->get_pri();
+			});
+			after    = Task::current()->get_pri();
+			low_done = Global::os_ticks;
+		};
+
+		auto h1_task = [] { Task::delay(30_ms); mtx.hold([] {}); };
+		auto h2_task = [] { Task::delay(60_ms); mtx.hold([] {}); };
+
+		Task::create(low_task, P_L, "pmw/low");
+		Task::create(h1_task, P_H1, "pmw/h1");
+		Task::create(h2_task, P_H2, "pmw/h2");
+
+		wait_flag(low_done, 1000_ms);
+		Task::delay(20_ms); // Let h1/h2 finish
+
+		const bool ok = low_done != 0 && peak == P_H2 && after == P_L;
+		kprintf(
+		    "[TEST] PIP multi-waiter: peak=%d after=%d -> %s\n",
+		    peak, after, ok ? "PASS" : "FAIL"
+		);
+	}
+
+	// PIP: releasing an uncontended mutex must not drop a boost that another,
+	// still-held mutex is responsible for.
+	inline void pip_unrelated_unlock_test()
+	{
+		constexpr Task::Prior_t P_H = 2, P_L = 10;
+
+		static Sync::Mutex_t mtx_a, mtx_b;
+		static volatile Task::Tick_t low_done = 0;
+		static volatile Task::Prior_t mid = 0;
+
+		auto low_task = [] {
+			{
+				auto guard_a = mtx_a.lock();
+				{
+					auto guard_b = mtx_b.lock();
+					busy_for(60_ms); // H blocks on A meanwhile
+				} // B was never contended
+				mid = Task::current()->get_pri();
+				busy_for(20_ms);
+			}
+			low_done = Global::os_ticks;
+		};
+
+		auto h_task = [] { Task::delay(30_ms); mtx_a.hold([] {}); };
+
+		Task::create(low_task, P_L, "pul/low");
+		Task::create(h_task, P_H, "pul/h");
+
+		wait_flag(low_done, 1000_ms);
+		Task::delay(20_ms);
+
+		const bool ok = low_done != 0 && mid == P_H;
+		kprintf(
+		    "[TEST] PIP unrelated unlock: pri after B=%d -> %s\n",
+		    mid, ok ? "PASS" : "FAIL"
+		);
+	}
+
+	// PIP: H waits on B held by M, M waits on A held by L. H's priority must
+	// reach L through the chain.
+	inline void pip_transitive_test()
+	{
+		constexpr Task::Prior_t P_H = 1, P_M = 5, P_L = 10;
+
+		static Sync::Mutex_t mtx_a, mtx_b;
+		static volatile Task::Tick_t low_done = 0;
+		static volatile Task::Prior_t low_peak = 0;
+
+		auto low_task = [] {
+			mtx_a.hold([] {
+				busy_for(120_ms);
+				low_peak = Task::current()->get_pri();
+			});
+			low_done = Global::os_ticks;
+		};
+
+		auto m_task = [] {
+			Task::delay(20_ms);
+			mtx_b.hold([] { mtx_a.hold([] {}); });
+		};
+
+		auto h_task = [] { Task::delay(50_ms); mtx_b.hold([] {}); };
+
+		Task::create(low_task, P_L, "ptr/low");
+		Task::create(m_task, P_M, "ptr/m");
+		Task::create(h_task, P_H, "ptr/h");
+
+		wait_flag(low_done, 1000_ms);
+		Task::delay(20_ms);
+
+		const bool ok = low_done != 0 && low_peak == P_H;
+		kprintf(
+		    "[TEST] PIP transitive: low peak=%d -> %s\n",
+		    low_peak, ok ? "PASS" : "FAIL"
+		);
+	}
+
+	// MsgQueue: a sender woken because space became available may find the
+	// queue full again (another sender got there first). It must wait again
+	// instead of reporting success for a message that was dropped.
+	inline void msgq_recheck_test()
+	{
+		using Q = IPC::MsgQueue_t<int, 1>;
+		static Q q;
+		static volatile Task::Tick_t sent = 0;
+		static volatile bool sent_ok = false;
+
+		auto sender = [] {
+			sent_ok = q.send(1, 300_ms) == Q::Ok;
+			sent    = Global::os_ticks;
+		};
+
+		q.send(0, 0);                       // Fill the queue
+		Task::create(sender, 10, "mrc/s1"); // Lower priority than this task
+		Task::delay(10_ms);                 // s1 blocks: queue is full
+
+		auto r0 = q.recv(0);  // Frees the slot and wakes s1 ...
+		q.send(2, 0);         // ... but this task refills it first
+		Task::delay(10_ms);   // s1 runs and must find the queue full
+
+		auto r1 = q.recv(0);    // 2, wakes s1 again
+		auto r2 = q.recv(300_ms); // 1, if s1 really delivered it
+		wait_flag(sent, 400_ms);
+
+		const bool ok = r0.msg == 0 && r1.msg == 2 &&
+		                sent_ok && r2.status == Q::Ok && r2.msg == 1;
+		kprintf(
+		    "[TEST] MsgQueue recheck: s1=%s r1=%d r2=%s/%d -> %s\n",
+		    sent_ok ? "Ok" : "TimeOut", r1.msg,
+		    r2.status == Q::Ok ? "Ok" : "TimeOut", r2.msg,
+		    ok ? "PASS" : "FAIL"
+		);
+	}
+
 	// Run the batteries that make sense for the active policy.
 	inline void SchedPolicyTest()
 	{
@@ -487,7 +537,12 @@ namespace MOS::Examples::Test
 		              DEFAULT_POLICY == Policy::DeadlineMonotonic) {
 			preempt_test();
 			nested_pip_test();
+			pip_multi_waiter_test();
+			pip_unrelated_unlock_test();
+			pip_transitive_test();
 		}
+
+		msgq_recheck_test();
 
 		if constexpr (DEFAULT_POLICY == Policy::Cooperative) {
 			coop_test();

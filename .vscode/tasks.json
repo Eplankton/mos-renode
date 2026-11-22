@@ -29,7 +29,7 @@
             "command": "renode",
             "args": [
                 "--console",
-                "${workspaceFolder}/emulation/stm32f4-disco/debug.resc"
+                "${workspaceFolder}/examples/boards/stm32f4-disco/renode/debug.resc"
             ],
             "dependsOn": ["CMake Build (F4)"],
             "isBackground": true,
@@ -56,7 +56,7 @@
             "command": "renode",
             "args": [
                 "--console",
-                "${workspaceFolder}/emulation/stm32h7-disco/debug.resc"
+                "${workspaceFolder}/examples/boards/stm32h7-disco/renode/debug.resc"
             ],
             "dependsOn": ["CMake Build (H7)"],
             "isBackground": true,
@@ -83,7 +83,7 @@
             "command": "renode",
             "args": [
                 "--console",
-                "${workspaceFolder}/emulation/stm32f4-disco/multi_mach.resc"
+                "${workspaceFolder}/examples/boards/stm32f4-disco/renode/multi_mach.resc"
             ],
             "dependsOn": ["CMake Build (F4)"],
             "isBackground": true,
@@ -110,7 +110,7 @@
             "command": "renode",
             "args": [
                 "--console",
-                "${workspaceFolder}/emulation/stm32h7-disco/multi_mach.resc"
+                "${workspaceFolder}/examples/boards/stm32h7-disco/renode/multi_mach.resc"
             ],
             "dependsOn": ["CMake Build (H7)"],
             "isBackground": true,
@@ -136,6 +136,71 @@
             "command": "exit",
             "type": "shell",
             "problemMatcher": []
+        },
+        {
+            "label": "CMake Build (HiFive1)",
+            "type": "shell",
+            "command": "./build.sh hifive1",
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode (HiFive1)",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "--console",
+                "${workspaceFolder}/examples/boards/hifive1/renode/debug.resc"
+            ],
+            "dependsOn": ["CMake Build (HiFive1)"],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*MOS_RENODE_READY.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode (HiFive1 multi-machine)",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "--console",
+                "${workspaceFolder}/examples/boards/hifive1/renode/multi_mach.resc"
+            ],
+            "dependsOn": ["CMake Build (HiFive1)"],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*MOS_RENODE_READY.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
         }
     ]
 }

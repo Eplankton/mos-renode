@@ -1,0 +1,20 @@
+:name: stm32f4-disco
+:description: MOS RTOS on STM32F4 Discovery (Cortex-M4)
+
+# Run from the repository root:
+#   renode --console examples/boards/stm32f4-disco/renode/debug.resc
+# Then use VS Code F5 or connect GDB to localhost:1234.
+$name?="stm32f4-disco"
+$bin_path?=$CWD/build/stm32f4-disco/stm32f4-disco.elf
+
+mach create $name
+include $ORIGIN/board.resc
+
+machine StartGdbServer 1234
+
+# Shell UART (USART2) -> TCP 3333
+emulation CreateServerSocketTerminal 3333 "uart-con" false
+connector Connect sysbus.usart2 uart-con
+
+# Readiness marker used by emulation/run.sh
+echo "MOS_RENODE_READY"

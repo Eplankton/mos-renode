@@ -16,3 +16,15 @@
 [submodule "vendor/stm32/stm32h7xx-hal-driver"]
 	path = vendor/stm32/stm32h7xx-hal-driver
 	url = https://github.com/STMicroelectronics/stm32h7xx-hal-driver.git
+[submodule "benchmarks/external/thread-metric-benchmark"]
+	path = benchmarks/external/thread-metric-benchmark
+	url = https://github.com/sysprog21/thread-metric-benchmark.git
+	update = none
+[submodule "benchmarks/external/rtos-benchmark"]
+	path = benchmarks/external/rtos-benchmark
+	url = https://github.com/zephyrproject-rtos/rtos-benchmark.git
+	update = none
+[submodule "benchmarks/external/FreeRTOS-Kernel"]
+	path = benchmarks/external/FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+	update = none

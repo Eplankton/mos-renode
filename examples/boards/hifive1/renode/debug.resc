@@ -1,0 +1,20 @@
+:name: HiFive1
+:description: MOS RTOS on SiFive HiFive1 (FE310, RV32IMAC)
+
+# Run from the repository root:
+#   renode --console examples/boards/hifive1/renode/debug.resc
+# Then connect riscv-none-elf-gdb to localhost:1234.
+$name?="HiFive1"
+$bin_path?=$CWD/build/hifive1/hifive1.elf
+
+mach create $name
+include $ORIGIN/board.resc
+
+machine StartGdbServer 1234
+
+# Shell UART (UART0) -> TCP 3333
+emulation CreateServerSocketTerminal 3333 "uart-con" false
+connector Connect sysbus.uart0 uart-con
+
+# Readiness marker used by emulation/run.sh
+echo "MOS_RENODE_READY"

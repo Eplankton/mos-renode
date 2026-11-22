@@ -4,16 +4,27 @@ type: ARM
 deviceName: null
 packDir: null
 srcDirs:
-  - core
-  - examples/common
+  - core/kernel
+  - core/libc
   - examples/boards/stm32f4-disco
-  - vendor/stm32/cmsis-device-f4/Source/Templates
-  - vendor/stm32/stm32f4xx-hal-driver/Src
 virtualFolder:
   name: <virtual_root>
-  files:
-    - examples/boards/stm32f4-disco/main.cpp
-  folders: []
+  files: []
+  folders:
+    - name: vendor
+      files:
+        - path: vendor/stm32/cmsis-device-f4/Source/Templates/gcc/startup_stm32f407xx.s
+        - path: vendor/stm32/cmsis-device-f4/Source/Templates/system_stm32f4xx.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_cortex.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_rcc.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_rcc_ex.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_pwr.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_pwr_ex.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_flash.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_hal_flash_ex.c
+        - path: vendor/stm32/stm32f4xx-hal-driver/Src/stm32f4xx_ll_gpio.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -29,14 +40,12 @@ targets:
         - MOS_FAMILY_STM32F4
         - 'MOS_DEVICE_HEADER="stm32f4xx.h"'
         - 'MOS_MCU="STM32F407xx"'
+        - MOS_BOARD_NAMESPACE=STM32F4Disco
       incList:
         - examples
-        - examples/common
         - examples/boards/stm32f4-disco
         - core
-        - core/kernel
-        - core/kernel/data_type
-        - core/arch
+        - core/external/etl/include
         - vendor/stm32/cmsis-core/CMSIS/Core/Include
         - vendor/stm32/cmsis-device-f4/Include
         - vendor/stm32/stm32f4xx-hal-driver/Inc
@@ -61,8 +70,8 @@ targets:
             ASM_FLAGS: -ffunction-sections -fdata-sections
           beforeBuildTasks: []
           c/cpp-compiler:
-            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=c++23 -fcoroutines -fno-exceptions -fno-rtti -g
-            C_FLAGS: -Wno-empty-body -g
+            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -std=c++23 -fcoroutines -fno-exceptions -fno-rtti -fno-use-cxa-atexit -funsigned-char -g
+            C_FLAGS: -Wno-empty-body -funsigned-char -g
             language-c: c17
             language-cpp: c++23
             one-elf-section-per-data: true
@@ -126,14 +135,12 @@ targets:
         - MOS_FAMILY_STM32F4
         - 'MOS_DEVICE_HEADER="stm32f4xx.h"'
         - 'MOS_MCU="STM32F407xx"'
+        - MOS_BOARD_NAMESPACE=STM32F4Disco
       incList:
         - examples
-        - examples/common
         - examples/boards/stm32f4-disco
         - core
-        - core/kernel
-        - core/kernel/data_type
-        - core/arch
+        - core/external/etl/include
         - vendor/stm32/cmsis-core/CMSIS/Core/Include
         - vendor/stm32/cmsis-device-f4/Include
         - vendor/stm32/stm32f4xx-hal-driver/Inc
@@ -158,8 +165,8 @@ targets:
             ASM_FLAGS: -ffunction-sections -fdata-sections
           beforeBuildTasks: []
           c/cpp-compiler:
-            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -fno-exceptions -fno-rtti -flto -fcoroutines
-            C_FLAGS: -Wno-empty-body -Wno-deprecated-volatile
+            CXX_FLAGS: -Wno-reorder -Wno-volatile -Wno-empty-body -fno-exceptions -fno-rtti -flto -fcoroutines -fno-use-cxa-atexit -funsigned-char
+            C_FLAGS: -Wno-empty-body -Wno-deprecated-volatile -funsigned-char
             language-c: c17
             language-cpp: c++23
             no-exceptions: true
